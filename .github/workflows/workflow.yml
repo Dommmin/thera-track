@@ -43,13 +43,6 @@ jobs:
         env:
           APP_ENV: prod
 
-      - name: Clear and warm up cache manually
-        run: |
-          php bin/console cache:clear --env=prod --no-debug --no-warmup
-          php bin/console cache:warmup --env=prod --no-debug
-        env:
-          APP_ENV: prod
-
       - name: Create release archive
         run: |
           mkdir release
