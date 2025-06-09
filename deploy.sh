@@ -66,18 +66,13 @@ TEMP_LINK="$CURRENT_LINK.tmp.$$"
 ln -sf "$RELEASE_DIR" "$TEMP_LINK"
 mv "$TEMP_LINK" "$CURRENT_LINK"
 
-echo "▶️ Restarting PHP-FPM to apply new code..."
-PHP_VERSION=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
-if sudo systemctl restart php${PHP_VERSION}-fpm; then
-    echo "✅ PHP-FPM restarted successfully"
-else
-    echo "❌ Failed to restart PHP-FPM!"
-    if [ -L "$CURRENT_LINK.backup" ]; then
-        echo "🔄 Rolling back to previous version..."
-        mv "$CURRENT_LINK.backup" "$CURRENT_LINK"
-    fi
-    exit 1
-fi
+#echo "▶️ Restarting PHP-FPM to apply new code..."
+#if sudo systemctl restart php8.3-fpm; then
+#    echo "✅ PHP-FPM restarted successfully"
+#else
+#    echo "❌ Failed to restart PHP-FPM!"
+#    exit 1
+#fi
 
 # Backup current symlink for potential rollback
 cp -P "$CURRENT_LINK" "$CURRENT_LINK.backup" 2>/dev/null || true
