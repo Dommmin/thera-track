@@ -20,6 +20,7 @@
 ###< liip/imagine-bundle ###
 
 .cache/
+.cache/composer/
 
 .idea/
 

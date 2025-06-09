@@ -9,12 +9,15 @@
 </style>
 
 <div class="example-wrapper">
-    <h1>Hello {{ controller_name }}! ✅</h1>
-
-    This friendly message is coming from:
-    <ul>
-        <li>Your controller at <code>/home/dominik/projects/symfony/app/src/Controller/HomeController.php</code></li>
-        <li>Your template at <code>/home/dominik/projects/symfony/app/templates/home/index.html.twig</code></li>
-    </ul>
+    {% if app.user %}
+        <h1>Hello {{ app.user.email }}!</h1>
+    {% else %}
+        <h1>Hello Visitor!</h1>
+    {% endif %}
+    {% for message in app.flashes('verify_email') %}
+        <div class="alert alert-success" role="alert">
+            {{ message }}
+        </div>
+    {% endfor %}
 </div>
 {% endblock %}
