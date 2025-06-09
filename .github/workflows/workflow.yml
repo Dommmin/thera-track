@@ -47,9 +47,7 @@ jobs:
         run: |
           mkdir release
           shopt -s extglob
-          # Kopiuj wszystkie pliki oprócz niepotrzebnych w produkcji
-          cp -r !(release|.git|tests|node_modules|vendor|.github|*.md|phpunit.xml*|webpack.config.js) release/
-          # Usuń pliki deweloperskie z release
+          cp -r !(release|.git|tests|node_modules|.github|*.md|phpunit.xml*|webpack.config.js) release/
           rm -rf release/var/cache/dev release/var/log/* release/.env.test* release/phpunit.xml*
           tar -czf release.tar.gz -C release .
           rm -rf release
