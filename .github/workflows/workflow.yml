@@ -24,14 +24,38 @@ jobs:
           extensions: mbstring, dom, fileinfo, sqlite3, zip, gd, intl, redis, imagick
           tools: composer:v2
 
+      - name: Get Composer Cache Directory
+        id: composer-cache
+        run: |
+          echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
       - name: Install Composer dependencies
-        run: composer install --optimize-autoloader --no-dev --prefer-dist --no-interaction --no-progress
+        run: |
+          composer install --no-interaction --no-progress --no-dev --optimize-autoloader
+        env:
+          APP_ENV: prod
+
+      - name: Clear and warm up cache
+        run: |
+          php bin/console cache:clear --env=prod --no-debug
+          php bin/console cache:warmup --env=prod --no-debug
+        env:
+          APP_ENV: prod
 
       - name: Create release archive
         run: |
           mkdir release
           shopt -s extglob
-          cp -r !(release|.git|tests|vendor|release.tar.gz) release/
+          cp -r !(release|.git|tests|node_modules|.github|*.md|phpunit.xml*|webpack.config.js) release/
+          rm -rf release/var/cache/dev release/var/log/* release/.env.test* release/phpunit.xml*
           tar -czf release.tar.gz -C release .
           rm -rf release
 
@@ -71,11 +95,11 @@ jobs:
 
       - name: Upload release to server
         run: |
-          scp -vvv -P ${{ secrets.SSH_PORT }} release.tar.gz ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/home/${{ secrets.SSH_USER }}/symfony/
+          scp -P ${{ secrets.SSH_PORT }} release.tar.gz ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/home/${{ secrets.SSH_USER }}/symfony/
 
       - name: Upload .env file to shared directory
         run: |
-          scp -P ${{ secrets.SSH_PORT }} .env ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/home/${{ secrets.SSH_USER }}/symfony/shared/.env
+          scp -P ${{ secrets.SSH_PORT }} .env ${{ secrets.SSH_USER }}@${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/home/${{ secrets.SSH_USER }}/symfony/shared/.env
 
       - name: Run deploy script on server
         run: |
