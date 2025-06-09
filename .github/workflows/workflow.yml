@@ -13,10 +13,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Create .env file from GitHub Variables
-        run: |
-          echo "${{ vars.ENV_FILE }}" > .env
-
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -37,15 +33,19 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-composer-
 
-      - name: Install Composer dependencies
+      - name: Create .env file from GitHub Variables
         run: |
-          composer install --no-interaction --no-progress --no-dev --optimize-autoloader
+          echo "${{ vars.ENV_FILE }}" > .env
+
+      - name: Install Composer dependencies (skip scripts)
+        run: |
+          composer install --no-interaction --no-progress --no-dev --optimize-autoloader --no-scripts
         env:
           APP_ENV: prod
 
-      - name: Clear and warm up cache
+      - name: Clear and warm up cache manually
         run: |
-          php bin/console cache:clear --env=prod --no-debug
+          php bin/console cache:clear --env=prod --no-debug --no-warmup
           php bin/console cache:warmup --env=prod --no-debug
         env:
           APP_ENV: prod
@@ -54,7 +54,9 @@ jobs:
         run: |
           mkdir release
           shopt -s extglob
+          # Kopiuj wszystkie pliki oprócz niepotrzebnych w produkcji
           cp -r !(release|.git|tests|node_modules|.github|*.md|phpunit.xml*|webpack.config.js) release/
+          # Usuń pliki deweloperskie z release
           rm -rf release/var/cache/dev release/var/log/* release/.env.test* release/phpunit.xml*
           tar -czf release.tar.gz -C release .
           rm -rf release
