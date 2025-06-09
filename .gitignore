@@ -22,3 +22,5 @@
 .cache/
 
 .idea/
+
+.bash_history
