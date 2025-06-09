@@ -20,8 +20,9 @@
 ###< liip/imagine-bundle ###
 
 .cache/
-.cache/composer/
 
 .idea/
 
 .bash_history
+/.config/
+/.local/
