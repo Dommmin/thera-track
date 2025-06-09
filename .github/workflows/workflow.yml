@@ -48,7 +48,7 @@ jobs:
           mkdir release
           shopt -s extglob
           # Kopiuj wszystkie pliki oprócz niepotrzebnych w produkcji
-          cp -r !(release|.git|tests|node_modules|.github|*.md|phpunit.xml*|webpack.config.js) release/
+          cp -r !(release|.git|tests|node_modules|vendor|.github|*.md|phpunit.xml*|webpack.config.js) release/
           # Usuń pliki deweloperskie z release
           rm -rf release/var/cache/dev release/var/log/* release/.env.test* release/phpunit.xml*
           tar -czf release.tar.gz -C release .
@@ -94,7 +94,7 @@ jobs:
 
       - name: Upload .env file to shared directory
         run: |
-          scp -P ${{ secrets.SSH_PORT }} .env ${{ secrets.SSH_USER }}@${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/home/${{ secrets.SSH_USER }}/symfony/shared/.env
+          scp -P ${{ secrets.SSH_PORT }} .env ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/home/${{ secrets.SSH_USER }}/symfony/shared/.env
 
       - name: Run deploy script on server
         run: |
