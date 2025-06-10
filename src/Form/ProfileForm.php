@@ -30,6 +30,29 @@ class ProfileForm extends AbstractType
                     'placeholder' => '+48 123 456 789'
                 ]
             ])
+            ->add('location', TextType::class, [
+                'required' => false,
+                'attr' => [
+                    'placeholder' => 'Miasto lub adres',
+                ],
+                'label' => 'Lokalizacja',
+            ])
+            ->add('latitude', TextType::class, [
+                'required' => false,
+                'attr' => [
+                    'readonly' => true,
+                    'class' => 'd-none',
+                ],
+                'label' => false,
+            ])
+            ->add('longitude', TextType::class, [
+                'required' => false,
+                'attr' => [
+                    'readonly' => true,
+                    'class' => 'd-none',
+                ],
+                'label' => false,
+            ])
         ;
     }
 

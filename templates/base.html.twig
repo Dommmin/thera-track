@@ -46,19 +46,28 @@
                         <a href="{{ path('app_home') }}" class="btn btn-ghost text-xl">
                             <span class="text-primary font-bold">Thera</span><span class="text-secondary">Track</span>
                         </a>
+                        <div class="flex-none hidden lg:flex">
+                            <ul class="menu menu-horizontal px-1">
+                                <li><a href="{{ path('app_therapist_list') }}">Find a Therapist</a></li>
+                            </ul>
+                        </div>
                     </div>
                     <div class="flex-none">
                         {% if app.user %}
                             <div class="dropdown dropdown-end">
                                 <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
-                                    <div class="w-10 rounded-full bg-primary text-white flex items-center justify-center">
-                                        {{ app.user.firstName|first }}{{ app.user.lastName|first }}
-                                    </div>
+                                    {% if app.user.avatar %}
+                                        <img src="{{ app.user.avatar }}" alt="{{ app.user.firstName }} {{ app.user.lastName }}" class="w-10 h-10 rounded-full" />
+                                    {% else %}
+                                        <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center">
+                                            {{ app.user.firstName|first }}{{ app.user.lastName|first }}
+                                        </div>
+                                    {% endif %}
                                 </div>
                                 <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+                                    <li><a href="{{ path('app_settings') }}">Settings</a></li>
                                     {% if is_granted('ROLE_THERAPIST') %}
-                                        <li><a href="{{ path('app_therapist_availability') }}">Availability</a></li>
-                                        <li><a href="{{ path('app_therapist_settings') }}">Settings</a></li>
+                                        <li><a href="{{ path('app_availability_index') }}">My Availability</a></li>
                                     {% endif %}
                                     <li><a href="{{ path('app_logout') }}">Logout</a></li>
                                 </ul>

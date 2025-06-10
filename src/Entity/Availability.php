@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\AvailabilityRepository;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -14,25 +15,25 @@ class Availability
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(inversedBy: 'availabilities')]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?User $therapist = null;
+    #[ORM\Column(length: 255)]
+    #[Assert\NotBlank]
+    #[Assert\Range(min: 1, max: 7)]
+    private ?string $dayOfWeek = null;
 
-    #[ORM\Column]
+    #[ORM\Column(type: Types::TIME_MUTABLE)]
     #[Assert\NotBlank]
     #[Assert\Range(min: 0, max: 23)]
-    private ?int $startHour = null;
+    private ?\DateTimeInterface $startHour = null;
 
-    #[ORM\Column]
+    #[ORM\Column(type: Types::TIME_MUTABLE)]
     #[Assert\NotBlank]
     #[Assert\Range(min: 0, max: 23)]
     #[Assert\GreaterThan(propertyPath: 'startHour')]
-    private ?int $endHour = null;
+    private ?\DateTimeInterface $endHour = null;
 
-    #[ORM\Column]
-    #[Assert\NotBlank]
-    #[Assert\Range(min: 1, max: 7)]
-    private ?int $dayOfWeek = null;
+    #[ORM\ManyToOne(inversedBy: 'availabilities')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?User $therapist = null;
 
     #[ORM\Column]
     private ?bool $isAvailable = true;
@@ -45,6 +46,42 @@ class Availability
         return $this->id;
     }
 
+    public function getDayOfWeek(): ?string
+    {
+        return $this->dayOfWeek;
+    }
+
+    public function setDayOfWeek(string $dayOfWeek): static
+    {
+        $this->dayOfWeek = $dayOfWeek;
+
+        return $this;
+    }
+
+    public function getStartHour(): ?\DateTimeInterface
+    {
+        return $this->startHour;
+    }
+
+    public function setStartHour(\DateTimeInterface $startHour): static
+    {
+        $this->startHour = $startHour;
+
+        return $this;
+    }
+
+    public function getEndHour(): ?\DateTimeInterface
+    {
+        return $this->endHour;
+    }
+
+    public function setEndHour(\DateTimeInterface $endHour): static
+    {
+        $this->endHour = $endHour;
+
+        return $this;
+    }
+
     public function getTherapist(): ?User
     {
         return $this->therapist;
@@ -53,39 +90,7 @@ class Availability
     public function setTherapist(?User $therapist): static
     {
         $this->therapist = $therapist;
-        return $this;
-    }
 
-    public function getStartHour(): ?int
-    {
-        return $this->startHour;
-    }
-
-    public function setStartHour(int $startHour): static
-    {
-        $this->startHour = $startHour;
-        return $this;
-    }
-
-    public function getEndHour(): ?int
-    {
-        return $this->endHour;
-    }
-
-    public function setEndHour(int $endHour): static
-    {
-        $this->endHour = $endHour;
-        return $this;
-    }
-
-    public function getDayOfWeek(): ?int
-    {
-        return $this->dayOfWeek;
-    }
-
-    public function setDayOfWeek(int $dayOfWeek): static
-    {
-        $this->dayOfWeek = $dayOfWeek;
         return $this;
     }
 
@@ -113,7 +118,7 @@ class Availability
 
     public function isWeekend(): bool
     {
-        return $this->dayOfWeek === 6 || $this->dayOfWeek === 7;
+        return $this->dayOfWeek === '6' || $this->dayOfWeek === '7';
     }
 
     public function isExcludedDate(\DateTimeInterface $date): bool

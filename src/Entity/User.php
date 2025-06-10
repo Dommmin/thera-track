@@ -12,6 +12,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
+#[ORM\HasLifecycleCallbacks]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -52,13 +53,28 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Assert\Length(min: 3, max: 20)]
     private ?string $phone = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $location = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $slug = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?float $latitude = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?float $longitude = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $avatar = null;
+
     #[ORM\OneToMany(mappedBy: 'therapist', targetEntity: Appointment::class)]
     private Collection $therapistAppointments;
 
     #[ORM\OneToMany(mappedBy: 'client', targetEntity: Appointment::class)]
     private Collection $clientAppointments;
 
-    #[ORM\OneToMany(mappedBy: 'therapist', targetEntity: Availability::class)]
+    #[ORM\OneToMany(mappedBy: 'therapist', targetEntity: Availability::class, orphanRemoval: true)]
     private Collection $availabilities;
 
     #[ORM\ManyToOne(inversedBy: 'users')]
@@ -164,6 +180,50 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    public function getLocation(): ?string
+    {
+        return $this->location;
+    }
+
+    public function setLocation(?string $location): static
+    {
+        $this->location = $location;
+        return $this;
+    }
+
+    public function getSlug(): ?string
+    {
+        return $this->slug;
+    }
+
+    public function setSlug(string $slug): static
+    {
+        $this->slug = $slug;
+        return $this;
+    }
+
+    public function getLatitude(): ?float
+    {
+        return $this->latitude;
+    }
+
+    public function setLatitude(?float $latitude): static
+    {
+        $this->latitude = $latitude;
+        return $this;
+    }
+
+    public function getLongitude(): ?float
+    {
+        return $this->longitude;
+    }
+
+    public function setLongitude(?float $longitude): static
+    {
+        $this->longitude = $longitude;
+        return $this;
+    }
+
     public function getFullName(): string
     {
         return $this->firstName . ' ' . $this->lastName;
@@ -203,6 +263,60 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setSpecialization(?Specialization $specialization): static
     {
         $this->specialization = $specialization;
+
+        return $this;
+    }
+
+    public function getAvailabilities(): Collection
+    {
+        return $this->availabilities;
+    }
+
+    public function addAvailability(Availability $availability): static
+    {
+        if (!$this->availabilities->contains($availability)) {
+            $this->availabilities->add($availability);
+            $availability->setTherapist($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAvailability(Availability $availability): static
+    {
+        if ($this->availabilities->removeElement($availability)) {
+            // set the owning side to null (unless already changed)
+            if ($availability->getTherapist() === $this) {
+                $availability->setTherapist(null);
+            }
+        }
+
+        return $this;
+    }
+
+    #[ORM\PrePersist]
+    #[ORM\PreUpdate]
+    public function updateSlug(): void
+    {
+        if (!$this->slug) {
+            $this->generateSlug();
+        }
+    }
+
+    public function generateSlug(): void
+    {
+        $baseSlug = strtolower($this->firstName . '-' . $this->lastName);
+        $this->slug = $baseSlug;
+    }
+
+    public function getAvatar(): ?string
+    {
+        return $this->avatar;
+    }
+
+    public function setAvatar(?string $avatar): static
+    {
+        $this->avatar = $avatar;
 
         return $this;
     }

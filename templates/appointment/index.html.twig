@@ -5,12 +5,19 @@
 {% block body %}
 <div class="flex justify-between items-center mb-8">
     <h1 class="text-3xl font-bold">My Appointments</h1>
-    <a href="{{ path('app_appointment_new') }}" class="btn btn-primary">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-        </svg>
-        Book New Appointment
-    </a>
+    <div class="dropdown dropdown-end">
+        <button tabindex="0" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Book New Appointment
+        </button>
+        <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+            {% for therapist in therapists %}
+                <li><a href="{{ path('app_appointment_new', {'therapist': therapist.id}) }}">{{ therapist.firstName }} {{ therapist.lastName }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
 </div>
 
 {% if appointments is empty %}

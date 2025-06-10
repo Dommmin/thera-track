@@ -21,7 +21,7 @@ services:
     ports:
       - "9000:9000"
     depends_on:
-      postgres:
+      mysql:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -40,24 +40,26 @@ services:
     networks:
       - symfony-network
 
-  postgres:
-    image: postgres:16-alpine
-    container_name: ${COMPOSE_PROJECT_NAME}_postgres
+  mysql:
+    image: mysql:8.0
+    container_name: ${COMPOSE_PROJECT_NAME}_mysql
     restart: on-failure
     environment:
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_USER: ${DB_USER:-app}
-      POSTGRES_DB: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-app} -d ${DB_DATABASE}"]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 60s
     ports:
-      - "5432:5432"
+      - "3306:3306"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mysql_data:/var/lib/mysql
     networks:
       - symfony-network
 
@@ -93,7 +95,7 @@ networks:
     driver: bridge
 
 volumes:
-  postgres_data:
+  mysql_data:
     driver: local
   mailhog_data:
     driver: local

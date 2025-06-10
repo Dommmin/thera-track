@@ -63,15 +63,27 @@ class GoogleCalendarService
             return;
         }
 
+        // Create a DateTime object for the current date
+        $date = new \DateTime();
+        // Set the day of week (1 = Monday, 7 = Sunday)
+        $date->setISODate($date->format('Y'), $date->format('W'), $availability->getDayOfWeek());
+        
+        // Create start and end times
+        $startTime = clone $date;
+        $startTime->setTime($availability->getStartHour(), 0, 0);
+        
+        $endTime = clone $date;
+        $endTime->setTime($availability->getEndHour(), 0, 0);
+
         $event = new Google_Service_Calendar_Event([
             'summary' => 'Available for Appointments',
             'description' => 'This time slot is available for booking',
             'start' => [
-                'dateTime' => $availability->getDate()->format('Y-m-d') . 'T' . $availability->getStartTime()->format('H:i:s'),
+                'dateTime' => $startTime->format(\DateTime::RFC3339),
                 'timeZone' => 'UTC',
             ],
             'end' => [
-                'dateTime' => $availability->getDate()->format('Y-m-d') . 'T' . $availability->getEndTime()->format('H:i:s'),
+                'dateTime' => $endTime->format(\DateTime::RFC3339),
                 'timeZone' => 'UTC',
             ],
             'transparency' => 'transparent',

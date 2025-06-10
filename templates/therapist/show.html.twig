@@ -1,0 +1,74 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ therapist.firstName }} {{ therapist.lastName }} - Therapist Profile{% endblock %}
+
+{% block body %}
+    <div class="max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Profile Information -->
+            <div class="lg:col-span-2">
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h1 class="text-3xl font-bold mb-4">{{ therapist.firstName }} {{ therapist.lastName }}</h1>
+                        
+                        {% if therapist.location %}
+                            <p class="text-base-content/70 mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                {{ therapist.location }}
+                            </p>
+                        {% endif %}
+
+                        {% if therapist.bio %}
+                            <div class="prose max-w-none mb-6">
+                                {{ therapist.bio|nl2br }}
+                            </div>
+                        {% endif %}
+
+                        <div class="divider"></div>
+
+                        <h2 class="text-2xl font-bold mb-4">Availability</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {% for availability in therapist.availabilities %}
+                                <div class="card bg-base-200">
+                                    <div class="card-body">
+                                        <h3 class="card-title text-lg">{{ availability.dayOfWeek }}</h3>
+                                        <p class="text-sm">
+                                            {{ availability.startHour|date('H:i') }} - {{ availability.endHour|date('H:i') }}
+                                        </p>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Booking Section -->
+            <div class="lg:col-span-1">
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h2 class="card-title mb-4">Book a Session</h2>
+                        {% if is_granted('ROLE_USER') %}
+{#                            <a href="{{ path('app_booking_new', {'therapist': therapist.id}) }}" class="btn btn-primary w-full">#}
+{#                                Book Now#}
+{#                            </a>#}
+                        {% else %}
+                            <div class="alert alert-info">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span>Please log in to book a session</span>
+                            </div>
+                            <a href="{{ path('app_login') }}" class="btn btn-primary w-full mt-4">
+                                Log In
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %} 

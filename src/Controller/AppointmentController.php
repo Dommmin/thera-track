@@ -26,17 +26,28 @@ class AppointmentController extends AbstractController
 
     #[Route('/', name: 'app_appointment_index', methods: ['GET'])]
     #[IsGranted('ROLE_USER')]
-    public function index(AppointmentRepository $appointmentRepository): Response
-    {
+    public function index(
+        AppointmentRepository $appointmentRepository,
+        EntityManagerInterface $entityManager
+    ): Response {
         /** @var User $user */
         $user = $this->getUser();
         
         $upcomingAppointments = $appointmentRepository->findUpcomingAppointments($user);
         $pastAppointments = $appointmentRepository->findPastAppointments($user);
 
+        // Get all therapists
+        $therapists = $entityManager->getRepository(User::class)
+            ->createQueryBuilder('u')
+            ->where('u.roles LIKE :role')
+            ->setParameter('role', '%ROLE_THERAPIST%')
+            ->getQuery()
+            ->getResult();
+
         return $this->render('appointment/index.html.twig', [
             'upcoming_appointments' => $upcomingAppointments,
             'past_appointments' => $pastAppointments,
+            'therapists' => $therapists,
         ]);
     }
 

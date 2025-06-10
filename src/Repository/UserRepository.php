@@ -11,6 +11,11 @@ use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
 
 /**
  * @extends ServiceEntityRepository<User>
+ *
+ * @method User|null find($id, $lockMode = null, $lockVersion = null)
+ * @method User|null findOneBy(array $criteria, array $orderBy = null)
+ * @method User[]    findAll()
+ * @method User[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
 class UserRepository extends ServiceEntityRepository implements PasswordUpgraderInterface
 {
@@ -31,6 +36,39 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $user->setPassword($newHashedPassword);
         $this->getEntityManager()->persist($user);
         $this->getEntityManager()->flush();
+    }
+
+    public function generateUniqueSlug(User $user): void
+    {
+        $baseSlug = strtolower($user->getFirstName() . '-' . $user->getLastName());
+        $slug = $baseSlug;
+        $counter = 1;
+
+        while ($this->findOneBy(['slug' => $slug])) {
+            $slug = $baseSlug . '-' . $counter;
+            $counter++;
+        }
+
+        $user->setSlug($slug);
+    }
+
+    public function findTherapists(?string $location = null, ?string $search = null): array
+    {
+        $queryBuilder = $this->createQueryBuilder('u')
+            ->where('u.roles LIKE :role')
+            ->setParameter('role', '%"ROLE_THERAPIST"%');
+
+        if ($location) {
+            $queryBuilder->andWhere('u.location LIKE :location')
+                ->setParameter('location', '%' . $location . '%');
+        }
+
+        if ($search) {
+            $queryBuilder->andWhere('u.firstName LIKE :search OR u.lastName LIKE :search')
+                ->setParameter('search', '%' . $search . '%');
+        }
+
+        return $queryBuilder->getQuery()->getResult();
     }
 
     //    /**
