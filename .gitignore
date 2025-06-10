@@ -26,3 +26,5 @@
 .bash_history
 /.config/
 /.local/
+
+theratrack-symfony/

@@ -1,0 +1,79 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Register as Patient{% endblock %}
+
+{% block body %}
+<div class="min-h-full flex items-center justify-center bg-base-200 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-2xl w-full space-y-8">
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="flex justify-center card-title text-2xl font-bold mb-6">Create a Patient Account</h2>
+
+                {{ form_start(registrationForm, {'attr': {'class': 'space-y-6'}}) }}
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <div class="form-control w-full">
+                            {{ form_label(registrationForm.firstName) }}
+                            {{ form_widget(registrationForm.firstName) }}
+                            {{ form_errors(registrationForm.firstName) }}
+                        </div>
+                        <div class="form-control w-full">
+                            {{ form_label(registrationForm.lastName) }}
+                            {{ form_widget(registrationForm.lastName) }}
+                            {{ form_errors(registrationForm.lastName) }}
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <div class="form-control w-full">
+                            {{ form_label(registrationForm.email) }}
+                            {{ form_widget(registrationForm.email) }}
+                            {{ form_errors(registrationForm.email) }}
+                        </div>
+                        <div class="form-control w-full">
+                            {{ form_label(registrationForm.phone) }}
+                            {{ form_widget(registrationForm.phone) }}
+                            {{ form_errors(registrationForm.phone) }}
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <div class="form-control w-full">
+                            {{ form_label(registrationForm.plainPassword.first) }}
+                            {{ form_widget(registrationForm.plainPassword.first) }}
+                            {{ form_errors(registrationForm.plainPassword.first) }}
+                        </div>
+                        <div class="form-control w-full">
+                            {{ form_label(registrationForm.plainPassword.second) }}
+                            {{ form_widget(registrationForm.plainPassword.second) }}
+                            {{ form_errors(registrationForm.plainPassword.second) }}
+                        </div>
+                    </div>
+
+                    <div class="form-control">
+                        <div class="flex items-center gap-2">
+                            {{ form_widget(registrationForm.agreeTerms) }}
+                            <span class="label-text">I agree to the terms and conditions</span>
+                        </div>
+                        {{ form_errors(registrationForm.agreeTerms) }}
+                    </div>
+
+                    <div class="form-control mt-6">
+                        <button type="submit" class="btn btn-primary w-full">Register</button>
+                    </div>
+                {{ form_end(registrationForm) }}
+
+                <div class="text-center mt-4">
+                    <p class="text-sm text-base-content/70">
+                        Already have an account? 
+                        <a href="{{ path('app_login') }}" class="link link-primary">Log in</a>
+                    </p>
+                    <p class="text-sm text-base-content/70 mt-2">
+                        Are you a therapist? 
+                        <a href="{{ path('app_register_therapist') }}" class="link link-primary">Register as Therapist</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
