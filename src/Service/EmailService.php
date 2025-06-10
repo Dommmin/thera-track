@@ -44,6 +44,15 @@ class EmailService
         );
     }
 
+    public function sendAppointmentReminder(Appointment $appointment): void
+    {
+        $this->sendEmail(
+            $appointment->getClient()->getEmail(),
+            'Appointment Reminder',
+            $this->getReminderTemplate($appointment)
+        );
+    }
+
     private function sendEmail(string $to, string $subject, string $html): void
     {
         $email = (new Email())
@@ -90,6 +99,18 @@ class EmailService
             <p>Your appointment with {$otherParty->getFullName()} has been cancelled.</p>
             <p><strong>Date:</strong> {$appointment->getStartTime()->format('F j, Y')}</p>
             <p><strong>Time:</strong> {$appointment->getStartTime()->format('g:i A')} - {$appointment->getEndTime()->format('g:i A')}</p>
+        ";
+    }
+
+    private function getReminderTemplate(Appointment $appointment): string
+    {
+        return "
+            <h1>Appointment Reminder</h1>
+            <p>Dear {$appointment->getClient()->getFullName()},</p>
+            <p>This is a reminder for your appointment with {$appointment->getTherapist()->getFullName()}.</p>
+            <p><strong>Date:</strong> {$appointment->getStartTime()->format('F j, Y')}</p>
+            <p><strong>Time:</strong> {$appointment->getStartTime()->format('g:i A')} - {$appointment->getEndTime()->format('g:i A')}</p>
+            <p>Please arrive on time. If you need to cancel, do so at least 24 hours in advance.</p>
         ";
     }
 } 

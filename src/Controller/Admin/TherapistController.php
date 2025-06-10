@@ -4,7 +4,7 @@ namespace App\Controller\Admin;
 
 use App\Entity\Availability;
 use App\Entity\User;
-use App\Form\AvailabilityFormType;
+use App\Form\AvailabilityForm;
 use App\Form\ProfileForm;
 use App\Repository\AvailabilityRepository;
 use App\Service\GoogleCalendarService;
@@ -33,7 +33,7 @@ class TherapistController extends AbstractController
         $availability = new Availability();
         $availability->setTherapist($user);
         
-        $form = $this->createForm(AvailabilityFormType::class, $availability);
+        $form = $this->createForm(AvailabilityForm::class, $availability);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {

@@ -1,4 +1,4 @@
-{% extends 'base.html.twig' %}
+{% extends 'panel/base.html.twig' %}
 
 {% block title %}My Appointments{% endblock %}
 
@@ -14,7 +14,7 @@
         </button>
         <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
             {% for therapist in therapists %}
-                <li><a href="{{ path('app_appointment_new', {'therapist': therapist.id}) }}">{{ therapist.firstName }} {{ therapist.lastName }}</a></li>
+                <li><a href="{{ path('panel_appointment_new', {'therapist': therapist.id}) }}">{{ therapist.firstName }} {{ therapist.lastName }}</a></li>
             {% endfor %}
         </ul>
     </div>
@@ -54,7 +54,6 @@
                             {{ appointment.status|title }}
                         </div>
                     </div>
-
                     <div class="space-y-2 mb-4">
                         <div class="flex items-center text-sm">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-base-content/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -71,15 +70,14 @@
                             </div>
                         {% endif %}
                     </div>
-
                     <div class="card-actions justify-end">
                         {% if appointment.status == 'pending' %}
-                            <form method="post" action="{{ path('app_appointment_cancel', {'id': appointment.id}) }}" class="inline" onsubmit="return confirm('Are you sure you want to cancel this appointment?');">
+                            <form method="post" action="{{ path('panel_appointment_cancel', {'id': appointment.id}) }}" class="inline" onsubmit="return confirm('Are you sure you want to cancel this appointment?');">
                                 <input type="hidden" name="_token" value="{{ csrf_token('cancel' ~ appointment.id) }}">
                                 <button type="submit" class="btn btn-error btn-sm">Cancel</button>
                             </form>
                         {% endif %}
-                        <a href="{{ path('app_appointment_show', {'id': appointment.id}) }}" class="btn btn-primary btn-sm">View Details</a>
+                        <a href="{{ path('panel_appointment_show', {'id': appointment.id}) }}" class="btn btn-primary btn-sm">View Details</a>
                     </div>
                 </div>
             </div>
@@ -88,7 +86,7 @@
     <h2 class="text-xl font-semibold mb-4">Past Appointments</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for appointment in past_appointments %}
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card bg-base-100 shadow-xl opacity-70">
                 <div class="card-body">
                     <div class="flex justify-between items-start mb-4">
                         <div>
@@ -107,7 +105,6 @@
                             {{ appointment.status|title }}
                         </div>
                     </div>
-
                     <div class="space-y-2 mb-4">
                         <div class="flex items-center text-sm">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-base-content/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -124,15 +121,8 @@
                             </div>
                         {% endif %}
                     </div>
-
                     <div class="card-actions justify-end">
-                        {% if appointment.status == 'pending' %}
-                            <form method="post" action="{{ path('app_appointment_cancel', {'id': appointment.id}) }}" class="inline" onsubmit="return confirm('Are you sure you want to cancel this appointment?');">
-                                <input type="hidden" name="_token" value="{{ csrf_token('cancel' ~ appointment.id) }}">
-                                <button type="submit" class="btn btn-error btn-sm">Cancel</button>
-                            </form>
-                        {% endif %}
-                        <a href="{{ path('app_appointment_show', {'id': appointment.id}) }}" class="btn btn-primary btn-sm">View Details</a>
+                        <a href="{{ path('panel_appointment_show', {'id': appointment.id}) }}" class="btn btn-primary btn-sm">View Details</a>
                     </div>
                 </div>
             </div>

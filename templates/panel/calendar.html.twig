@@ -1,0 +1,58 @@
+{% extends 'panel/base.html.twig' %}
+
+{% block title %}My Calendar{% endblock %}
+
+{% block stylesheets %}
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
+{% endblock %}
+
+{% block body %}
+<div class="max-w-7xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold">My Calendar</h1>
+        <div class="flex gap-4">
+            <a href="{{ path('app_therapist_availability') }}" class="btn btn-ghost">Manage Availability</a>
+            <a href="{{ path('app_therapist_settings') }}" class="btn btn-ghost">Settings</a>
+        </div>
+    </div>
+    <div class="card bg-base-200">
+        <div class="card-body">
+            <div id="calendar"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'timeGridWeek',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                slotMinTime: '09:00:00',
+                slotMaxTime: '18:00:00',
+                events: {{ appointments|raw }},
+                eventClick: function(info) {
+                    window.location.href = '/panel/appointments/' + info.event.id;
+                },
+                eventTimeFormat: {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                },
+                slotLabelFormat: {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                }
+            });
+            calendar.render();
+        });
+    </script>
+{% endblock %} 

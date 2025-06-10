@@ -5,8 +5,11 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>{% block title %}{% endblock %} - TheraTrack</title>
         <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>💆</text></svg>">
-        <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" type="text/css" />
-        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+        <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+        <link href="https://cdn.jsdelivr.net/npm/daisyui@5/themes.css" rel="stylesheet" type="text/css" />
+        {% block stylesheets %}{% endblock %}
+        {% block javascripts %}{% endblock %}
         <script>
             tailwind.config = {
                 theme: {
@@ -21,11 +24,12 @@
                             'base-300': '#E5E7EB',
                         }
                     }
-                }
+                },
+                plugins: [
+                    require('daisyui'),
+                ]
             }
         </script>
-        {% block stylesheets %}{% endblock %}
-        {% block javascripts %}{% endblock %}
     </head>
     <body class="min-h-screen bg-base-200">
         <div class="drawer lg:drawer-open">
@@ -43,14 +47,24 @@
                         </label>
                     </div>
                     <div class="flex-1">
-                        <a href="{{ path('app_home') }}" class="btn btn-ghost text-xl">
-                            <span class="text-primary font-bold">Thera</span><span class="text-secondary">Track</span>
-                        </a>
-                        <div class="flex-none hidden lg:flex">
-                            <ul class="menu menu-horizontal px-1">
+                        <ul class="flex-none hidden lg:flex justify-start items-center">
+                            <li>
+                                <a href="{{ path('app_home') }}" class="btn btn-ghost text-xl">
+                                    <span class="text-primary font-bold">Thera</span><span class="text-secondary">Track</span>
+                                </a>
+                            </li>
+                            {% if not is_granted('ROLE_THERAPIST') %}
                                 <li><a href="{{ path('app_therapist_list') }}">Find a Therapist</a></li>
-                            </ul>
-                        </div>
+                            {% endif %}
+                        </ul>
+
+{#                        <div class="flex-none hidden lg:flex">#}
+{#                            <ul class="menu menu-horizontal px-1">#}
+{#                                {% if not is_granted('ROLE_THERAPIST') %}#}
+{#                                    <li><a href="{{ path('app_therapist_list') }}">Find a Therapist</a></li>#}
+{#                                {% endif %}#}
+{#                            </ul>#}
+{#                        </div>#}
                     </div>
                     <div class="flex-none">
                         {% if app.user %}
@@ -59,16 +73,19 @@
                                     {% if app.user.avatar %}
                                         <img src="{{ app.user.avatar }}" alt="{{ app.user.firstName }} {{ app.user.lastName }}" class="w-10 h-10 rounded-full" />
                                     {% else %}
-                                        <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center">
+                                        <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center text-lg font-bold">
                                             {{ app.user.firstName|first }}{{ app.user.lastName|first }}
                                         </div>
                                     {% endif %}
                                 </div>
                                 <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
-                                    <li><a href="{{ path('app_settings') }}">Settings</a></li>
-                                    {% if is_granted('ROLE_THERAPIST') %}
-                                        <li><a href="{{ path('app_availability_index') }}">My Availability</a></li>
+                                    {% if is_granted('ROLE_THERAPIST') or is_granted('ROLE_ADMIN') %}
+                                        <li><a href="{{ path('app_panel') }}">Panel</a></li>
                                     {% endif %}
+                                    {% if is_granted('ROLE_PATIENT') %}
+                                        <li><a href="{{ path('app_appointment_index') }}">My Appointments</a></li>
+                                    {% endif %}
+                                    <li><a href="{{ path('app_settings') }}">Settings</a></li>
                                     <li><a href="{{ path('app_logout') }}">Logout</a></li>
                                 </ul>
                             </div>
@@ -106,55 +123,6 @@
                     {% block body %}{% endblock %}
                 </main>
             </div>
-
-            <!-- Sidebar -->
-{#            <div class="drawer-side z-40">#}
-{#                <label for="drawer" class="drawer-overlay"></label>#}
-{#                <aside class="bg-base-100 w-80 min-h-screen">#}
-{#                    <div class="p-4">#}
-{#                        <a href="{{ path('app_home') }}" class="btn btn-ghost text-xl w-full justify-start">#}
-{#                            <span class="text-primary font-bold">Thera</span><span class="text-secondary">Track</span>#}
-{#                        </a>#}
-{#                    </div>#}
-{#                    <ul class="menu p-4 text-base-content">#}
-{#                        <li><a href="{{ path('app_home') }}" class="flex items-center">#}
-{#                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">#}
-{#                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />#}
-{#                            </svg>#}
-{#                            Dashboard#}
-{#                        </a></li>#}
-{#                        <li><a href="{{ path('app_appointment_index') }}" class="flex items-center">#}
-{#                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">#}
-{#                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />#}
-{#                            </svg>#}
-{#                            Appointments#}
-{#                        </a></li>#}
-{#                        {% if is_granted('ROLE_THERAPIST') %}#}
-{#                            <li><a href="{{ path('app_therapist_availability') }}" class="flex items-center">#}
-{#                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">#}
-{#                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />#}
-{#                                </svg>#}
-{#                                Availability#}
-{#                            </a></li>#}
-{#                            <li><a href="{{ path('app_therapist_calendar') }}" class="flex items-center">#}
-{#                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">#}
-{#                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />#}
-{#                                </svg>#}
-{#                                Calendar#}
-{#                            </a></li>#}
-{#                        {% endif %}#}
-{#                        {% if is_granted('ROLE_ADMIN') %}#}
-{#                            <li><a href="{{ path('app_admin_dashboard') }}" class="flex items-center">#}
-{#                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">#}
-{#                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />#}
-{#                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />#}
-{#                                </svg>#}
-{#                                Admin#}
-{#                            </a></li>#}
-{#                        {% endif %}#}
-{#                    </ul>#}
-{#                </aside>#}
-{#            </div>#}
         </div>
     </body>
 </html>
