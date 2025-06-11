@@ -31,13 +31,27 @@ class TherapistController extends AbstractController
     {
         $location = $request->query->get('location');
         $search = $request->query->get('search');
+        $sort = $request->query->get('sort', 'lastName_asc');
+        $page = max(1, (int)$request->query->get('page', 1));
+        $perPage = 6;
 
-        $therapists = $userRepository->findTherapists($location, $search);
+        $result = $userRepository->findTherapists($location, $search, $sort, $page, $perPage);
+        $therapists = $result['results'];
+        $total = $result['total'];
+        $totalPages = (int) ceil($total / $perPage);
+
+        // Przygotuj query params do paginacji
+        $query = $request->query->all();
+        unset($query['page']);
 
         return $this->render('app/therapist/list.html.twig', [
             'therapists' => $therapists,
             'location' => $location,
             'search' => $search,
+            'sort' => $sort,
+            'page' => $page,
+            'total_pages' => $totalPages,
+            'query' => $query,
         ]);
     }
 

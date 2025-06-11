@@ -23,7 +23,7 @@
                                     <span class="label-text">Location</span>
                                 </label>
                                 <input type="text" name="location" value="{{ location }}" 
-                                       class="input input-bordered" placeholder="Enter city or address">
+                                       class="input input-bordered w-full" placeholder="Enter city or address">
                             </div>
 
                             <div class="form-control">
@@ -31,7 +31,19 @@
                                     <span class="label-text">Search</span>
                                 </label>
                                 <input type="text" name="search" value="{{ search }}" 
-                                       class="input input-bordered" placeholder="Search by name">
+                                       class="input input-bordered w-full" placeholder="Search by name">
+                            </div>
+
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text">Sort by</span>
+                                </label>
+                                <select name="sort" class="select select-bordered w-full">
+                                    <option value="lastName_asc"{% if sort == 'lastName_asc' %} selected{% endif %}>Last Name (A-Z)</option>
+                                    <option value="lastName_desc"{% if sort == 'lastName_desc' %} selected{% endif %}>Last Name (Z-A)</option>
+                                    <option value="price_asc"{% if sort == 'price_asc' %} selected{% endif %}>Price (Lowest First)</option>
+                                    <option value="price_desc"{% if sort == 'price_desc' %} selected{% endif %}>Price (Highest First)</option>
+                                </select>
                             </div>
 
                             <button type="submit" class="btn btn-primary w-full">Apply Filters</button>
@@ -75,7 +87,10 @@
                         {% if therapist.bio %}
                             <p class="text-sm mt-2">{{ therapist.bio|slice(0, 100) }}...</p>
                         {% endif %}
-                        <div class="card-actions justify-end mt-4">
+                        <div class="card-actions items-center justify-between mt-4">
+                            <p class="text-sm text-base-content/70">
+                                <span class="font-bold">{{ therapist.hourlyRate }} PLN</span>
+                            </p>
                             <a href="{{ path('app_therapist_show', {'slug': therapist.slug}) }}"
                                class="btn btn-primary btn-sm">View Profile</a>
                         </div>
@@ -83,6 +98,15 @@
                 </div>
             {% endfor %}
         </div>
+        {% if total_pages > 1 %}
+            <div class="flex justify-center mt-8">
+                <nav class="join">
+                    {% for p in 1..total_pages %}
+                        <a href="?{{ query|merge({'page': p})|url_encode }}" class="join-item btn btn-sm {% if p == page %}btn-primary{% else %}btn-ghost{% endif %}">{{ p }}</a>
+                    {% endfor %}
+                </nav>
+            </div>
+        {% endif %}
     </div>
 {% endblock %}
 

@@ -52,7 +52,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $user->setSlug($slug);
     }
 
-    public function findTherapists(?string $location = null, ?string $search = null): array
+    public function findTherapists(?string $location = null, ?string $search = null, ?string $sort = null, int $page = 1, int $perPage = 10): array
     {
         $queryBuilder = $this->createQueryBuilder('u')
             ->where('u.roles LIKE :role')
@@ -68,7 +68,38 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
                 ->setParameter('search', '%' . $search . '%');
         }
 
-        return $queryBuilder->getQuery()->getResult();
+        // Sortowanie
+        switch ($sort) {
+            case 'lastName_desc':
+                $queryBuilder->orderBy('u.lastName', 'DESC');
+                break;
+            case 'price_asc':
+                $queryBuilder->orderBy('u.hourlyRate', 'ASC');
+                break;
+            case 'price_desc':
+                $queryBuilder->orderBy('u.hourlyRate', 'DESC');
+                break;
+            case 'lastName_asc':
+            default:
+                $queryBuilder->orderBy('u.lastName', 'ASC');
+                break;
+        }
+
+        $total = (clone $queryBuilder)
+            ->select('COUNT(u.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $results = $queryBuilder
+            ->setFirstResult(($page - 1) * $perPage)
+            ->setMaxResults($perPage)
+            ->getQuery()
+            ->getResult();
+
+        return [
+            'results' => $results,
+            'total' => $total,
+        ];
     }
 
     public function findAllTherapists(): array
