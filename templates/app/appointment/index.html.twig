@@ -7,7 +7,7 @@
     <h1 class="text-3xl font-bold">My Appointments</h1>
 </div>
 
-{% if upcoming_appointments is empty and past_appointments is empty %}
+{% if upcoming_appointments is empty and past_appointments is empty and cancelled_appointments is empty %}
     <div class="max-w-xl card bg-base-100 shadow-xl">
         <div class="card-body text-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-base-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -18,32 +18,9 @@
         </div>
     </div>
 {% else %}
-    {% set now = "now"|date('U') %}
-    {% set upcoming = [] %}
-    {% set past = [] %}
-    {% set cancelled = [] %}
-    {% for appointment in upcoming_appointments %}
-        {% if appointment.status.value == 'cancelled' %}
-            {% set cancelled = cancelled|merge([appointment]) %}
-        {% elseif appointment.startTime.timestamp < now %}
-            {% set past = past|merge([appointment]) %}
-        {% else %}
-            {% set upcoming = upcoming|merge([appointment]) %}
-        {% endif %}
-    {% endfor %}
-    {% for appointment in past_appointments %}
-        {% if appointment.status.value == 'cancelled' %}
-            {% set cancelled = cancelled|merge([appointment]) %}
-        {% elseif appointment.startTime.timestamp < now %}
-            {% set past = past|merge([appointment]) %}
-        {% else %}
-            {% set upcoming = upcoming|merge([appointment]) %}
-        {% endif %}
-    {% endfor %}
-
     <h2 class="text-xl font-semibold mb-4">Upcoming Appointments</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {% for appointment in upcoming %}
+        {% for appointment in upcoming_appointments %}
             <div class="card bg-base-100 shadow-xl">
                 <div class="card-body">
                     <div class="flex justify-between items-start mb-4">
@@ -97,7 +74,7 @@
 
     <h2 class="text-xl font-semibold mb-4">Past Appointments</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {% for appointment in past %}
+        {% for appointment in past_appointments %}
             <div class="card bg-base-100 shadow-xl">
                 <div class="card-body">
                     <div class="flex justify-between items-start mb-4">
@@ -147,7 +124,7 @@
 
     <h2 class="text-xl font-semibold mb-4">Cancelled Appointments</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {% for appointment in cancelled %}
+        {% for appointment in cancelled_appointments %}
             <div class="card bg-base-100 shadow-xl">
                 <div class="card-body">
                     <div class="flex justify-between items-start mb-4">

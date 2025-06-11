@@ -10,6 +10,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
+use App\Repository\UserRepository;
 
 #[Route('/settings')]
 class SettingsController extends AbstractController
@@ -21,7 +22,7 @@ class SettingsController extends AbstractController
     }
 
     #[Route('', name: 'app_settings', methods: ['GET', 'POST'])]
-    public function index(Request $request): Response
+    public function index(Request $request, UserRepository $userRepository): Response
     {
         /** @var User $user */
         $user = $this->getUser();
@@ -47,7 +48,7 @@ class SettingsController extends AbstractController
                 }
             }
 
-            $this->entityManager->flush();
+            $userRepository->updateUserSettings($user);
             $this->addFlash('success', 'Your settings have been updated successfully.');
 
             return $this->redirectToRoute('app_settings');

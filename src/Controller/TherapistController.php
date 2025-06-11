@@ -15,10 +15,17 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use App\Entity\AppointmentStatus;
+use App\Dto\Therapist\BookAppointmentDto;
+use App\Manager\AppointmentManager;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
+use App\Service\AvailabilityService;
 
 #[Route('/therapists', name: 'app_therapist_')]
 class TherapistController extends AbstractController
 {
+    public function __construct(private AppointmentManager $appointmentManager) {}
+
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(Request $request, UserRepository $userRepository): Response
     {
@@ -41,7 +48,9 @@ class TherapistController extends AbstractController
         AvailabilityRepository $availabilityRepository,
         AppointmentRepository $appointmentRepository,
         EntityManagerInterface $entityManager,
-        EmailService $emailService
+        EmailService $emailService,
+        ValidatorInterface $validator,
+        #[MapRequestPayload] ?BookAppointmentDto $dto = null
     ): Response {
         if (!in_array('ROLE_THERAPIST', $therapist->getRoles())) {
             throw $this->createNotFoundException('Therapist not found');
@@ -54,36 +63,20 @@ class TherapistController extends AbstractController
         $error = null;
 
         if ($request->isMethod('POST') && $this->isGranted('ROLE_PATIENT')) {
-            $dateStr = $request->request->get('date');
-            $hourStr = $request->request->get('hour');
-            if (!$dateStr || !$hourStr) {
-                $error = 'Please select date and hour.';
-            } else {
-                $dateObj = \DateTime::createFromFormat('Y-m-d H:i', $dateStr . ' ' . $hourStr);
-                if (!$dateObj) {
-                    $error = 'Invalid date or hour.';
+            if ($dto) {
+                $errors = $validator->validate($dto);
+                if (count($errors) > 0) {
+                    $error = (string) $errors;
                 } else {
-                    // Sprawdź, czy slot nie jest już zajęty
-                    $existing = $appointmentRepository->findOneBy([
-                        'therapist' => $therapist,
-                        'startTime' => $dateObj
-                    ]);
-                    if ($existing) {
-                        $error = 'This slot is already booked.';
-                    } else {
-                        $appointment = new Appointment();
-                        $appointment->setTherapist($therapist);
-                        $appointment->setClient($this->getUser());
-                        $appointment->setStartTime($dateObj);
-                        $appointment->setEndTime((clone $dateObj)->modify('+1 hour'));
-                        $appointment->setStatus(AppointmentStatus::SCHEDULED);
-                        $appointment->setPrice($therapist->getHourlyRate());
-                        $entityManager->persist($appointment);
-                        $entityManager->flush();
-                        $emailService->sendAppointmentConfirmation($appointment);
-                        $success = true;
+                    $result = $this->appointmentManager->bookAppointmentForTherapistPage($dto, $therapist, $this->getUser());
+                    $success = $result['success'];
+                    $error = $result['error'];
+                    if ($result['success']) {
+                        $emailService->sendAppointmentConfirmation($result['appointment']);
                     }
                 }
+            } else {
+                $error = 'Invalid data.';
             }
         }
 
@@ -97,8 +90,11 @@ class TherapistController extends AbstractController
     }
 
     #[Route('/{slug}/available-hours', name: 'available_hours', methods: ['GET'])]
-    public function availableHours(#[MapEntity(mapping: ['slug' => 'slug'])] User $therapist, Request $request, AvailabilityRepository $availabilityRepository, AppointmentRepository $appointmentRepository): Response
-    {
+    public function availableHours(
+        #[MapEntity(mapping: ['slug' => 'slug'])] User $therapist,
+        Request $request,
+        AvailabilityService $availabilityService
+    ): Response {
         $dateStr = $request->query->get('date');
         if (!$dateStr) {
             return $this->json(['error' => 'Missing date'], 400);
@@ -107,39 +103,7 @@ class TherapistController extends AbstractController
         if (!$date) {
             return $this->json(['error' => 'Invalid date'], 400);
         }
-        // Pobierz dostępność terapeuty na ten dzień tygodnia
-        $dayOfWeek = $date->format('N'); // 1=pon, 7=nd
-        $availabilities = $availabilityRepository->findBy([
-            'therapist' => $therapist,
-            'dayOfWeek' => $dayOfWeek,
-            'isAvailable' => true,
-        ]);
-        // Wyklucz wyłączone daty
-        $availabilities = array_filter($availabilities, function($a) use ($date) {
-            return !$a->isExcludedDate($date);
-        });
-        if (empty($availabilities)) {
-            return $this->json([]);
-        }
-        // Zbierz zajęte sloty (Appointment)
-        $appointments = $appointmentRepository->findAvailableSlots($therapist, $date);
-        $taken = [];
-        foreach ($appointments as $app) {
-            $taken[] = $app->getStartTime()->format('H:i');
-        }
-        // Generuj sloty co 30 min w ramach dostępności
-        $slots = [];
-        foreach ($availabilities as $a) {
-            $start = (clone $date)->setTime((int)$a->getStartHour()->format('H'), 0);
-            $end = (clone $date)->setTime((int)$a->getEndHour()->format('H'), (int)$a->getEndHour()->format('i'));
-            while ($start < $end) {
-                $slotStr = $start->format('H:i');
-                if (!in_array($slotStr, $taken)) {
-                    $slots[] = $slotStr;
-                }
-                $start->modify('+1 hour');
-            }
-        }
+        $slots = $availabilityService->getAvailableHours($therapist, $date);
         return $this->json($slots);
     }
 }

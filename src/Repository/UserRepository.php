@@ -71,6 +71,27 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         return $queryBuilder->getQuery()->getResult();
     }
 
+    public function findAllTherapists(): array
+    {
+        return $this->createQueryBuilder('u')
+            ->where('u.roles LIKE :role')
+            ->setParameter('role', '%ROLE_THERAPIST%')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function createUser(User $user): User
+    {
+        $this->_em->persist($user);
+        $this->_em->flush();
+        return $user;
+    }
+
+    public function updateUserSettings(User $user): void
+    {
+        $this->_em->flush();
+    }
+
     //    /**
     //     * @return User[] Returns an array of User objects
     //     */

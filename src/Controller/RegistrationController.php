@@ -16,6 +16,7 @@ use Symfony\Component\Mime\Address;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use SymfonyCasts\Bundle\VerifyEmail\Exception\VerifyEmailExceptionInterface;
+use App\Service\UserRegistrationService;
 
 class RegistrationController extends AbstractController
 {
@@ -24,7 +25,7 @@ class RegistrationController extends AbstractController
     }
 
     #[Route('/register', name: 'app_register')]
-    public function registerPatient(Request $request, UserPasswordHasherInterface $userPasswordHasher, EntityManagerInterface $entityManager): Response
+    public function registerPatient(Request $request, UserRegistrationService $registrationService): Response
     {
         if ($this->getUser()) {
             return $this->redirectToRoute('app_home');
@@ -35,19 +36,12 @@ class RegistrationController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $user->setRoles(['ROLE_PATIENT']);
-            
-            $user->setPassword(
-                $userPasswordHasher->hashPassword(
-                    $user,
-                    $form->get('plainPassword')->getData()
-                )
+            $registrationService->register(
+                $user,
+                $form->get('plainPassword')->getData(),
+                ['ROLE_PATIENT']
             );
 
-            $entityManager->persist($user);
-            $entityManager->flush();
-
-            // generate a signed url and email it to the user
             $this->emailVerifier->sendEmailConfirmation('app_verify_email', $user,
                 (new TemplatedEmail())
                     ->from(new Address('test@example.com', 'Test'))
@@ -69,7 +63,7 @@ class RegistrationController extends AbstractController
     }
 
     #[Route('/register/therapist', name: 'app_register_therapist')]
-    public function registerTherapist(Request $request, UserPasswordHasherInterface $userPasswordHasher, EntityManagerInterface $entityManager): Response
+    public function registerTherapist(Request $request, UserRegistrationService $registrationService): Response
     {
         if ($this->getUser()) {
             return $this->redirectToRoute('app_home');
@@ -80,19 +74,12 @@ class RegistrationController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $user->setRoles(['ROLE_THERAPIST']);
-            
-            $user->setPassword(
-                $userPasswordHasher->hashPassword(
-                    $user,
-                    $form->get('plainPassword')->getData()
-                )
+            $registrationService->register(
+                $user,
+                $form->get('plainPassword')->getData(),
+                ['ROLE_THERAPIST']
             );
 
-            $entityManager->persist($user);
-            $entityManager->flush();
-
-            // generate a signed url and email it to the user
             $this->emailVerifier->sendEmailConfirmation('app_verify_email', $user,
                 (new TemplatedEmail())
                     ->from(new Address('test@example.com', 'Test'))

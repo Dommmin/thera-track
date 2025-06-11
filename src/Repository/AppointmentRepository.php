@@ -66,4 +66,54 @@ class AppointmentRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    public function findUpcomingAppointmentsForUser(User $user): array
+    {
+        return $this->findUpcomingAppointments($user);
+    }
+
+    public function findPastAppointmentsForUser(User $user): array
+    {
+        return $this->findPastAppointments($user);
+    }
+
+    public function findUpcomingAppointmentsByStatus(User $user): array
+    {
+        return $this->createQueryBuilder('a')
+            ->andWhere('a.startTime > :now')
+            ->andWhere('a.status != :cancelled')
+            ->andWhere('a.therapist = :user OR a.client = :user')
+            ->setParameter('now', new \DateTime())
+            ->setParameter('cancelled', AppointmentStatus::CANCELLED)
+            ->setParameter('user', $user)
+            ->orderBy('a.startTime', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findPastAppointmentsByStatus(User $user): array
+    {
+        return $this->createQueryBuilder('a')
+            ->andWhere('a.startTime <= :now')
+            ->andWhere('a.status != :cancelled')
+            ->andWhere('a.therapist = :user OR a.client = :user')
+            ->setParameter('now', new \DateTime())
+            ->setParameter('cancelled', AppointmentStatus::CANCELLED)
+            ->setParameter('user', $user)
+            ->orderBy('a.startTime', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findCancelledAppointments(User $user): array
+    {
+        return $this->createQueryBuilder('a')
+            ->andWhere('a.status = :cancelled')
+            ->andWhere('a.therapist = :user OR a.client = :user')
+            ->setParameter('cancelled', AppointmentStatus::CANCELLED)
+            ->setParameter('user', $user)
+            ->orderBy('a.startTime', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 } 
