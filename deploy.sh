@@ -202,7 +202,7 @@ if ! php "$CURRENT_LINK/bin/console" --version >/dev/null 2>&1; then
     rollback
 fi
 
-echo "▶️ Cleaning old releases (keeping 5 latest)..."
+echo "▶️ Cleaning old releases (keeping 3 latest)..."
 cd "$RELEASES_DIR"
 if ls -dt */ >/dev/null 2>&1; then
     # Keep 3 latest releases
