@@ -1,0 +1,160 @@
+{% extends 'app/layout.html.twig' %}
+
+{% block title %}{{ therapist.firstName }} {{ therapist.lastName }} - Therapist Profile{% endblock %}
+
+{% block body %}
+    <div class="max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Profile Information -->
+            <div class="lg:col-span-2">
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h1 class="flex items-center text-3xl font-bold mb-4 gap-2">
+                            <img src="{{ therapist.avatar }}" alt="{{ therapist.firstName }} {{ therapist.lastName }}" class="w-10">
+                            {{ therapist.firstName }} {{ therapist.lastName }}
+                        </h1>
+                        
+                        {% if therapist.location %}
+                            <p class="text-base-content/70 mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                {{ therapist.location }}
+                            </p>
+                        {% endif %}
+
+                        {% if therapist.bio %}
+                            <div class="prose max-w-none mb-6">
+                                {{ therapist.bio|nl2br }}
+                            </div>
+                        {% endif %}
+
+                        <div class="divider"></div>
+
+                        <h2 class="text-2xl font-bold mb-4">Availability</h2>
+                        <form method="get" class="mb-4 flex flex-wrap gap-2 items-center">
+                            <label for="date" class="font-semibold">Choose a date:</label>
+                            <input type="date" id="date" name="date" value="{{ date|date('Y-m-d') }}" class="input input-bordered" min="{{ "now"|date('Y-m-d') }}" onchange="this.form.submit()">
+                        </form>
+                        {% if available_slots is empty %}
+                            <div class="alert alert-warning">No available slots for this day.</div>
+                        {% else %}
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {% for slot in available_slots %}
+                                    <div class="card bg-base-200">
+                                        <div class="card-body flex flex-col gap-2">
+                                            <div class="font-semibold">{{ slot.startHour|date('H:i') }} - {{ slot.endHour|date('H:i') }}</div>
+                                            {% if is_granted('ROLE_PATIENT') %}
+                                                <form method="post" class="mt-2">
+                                                    <input type="hidden" name="slot_id" value="{{ slot.id }}">
+                                                    <button type="submit" class="btn btn-primary btn-sm w-full">Book this slot</button>
+                                                </form>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        {% if success %}
+                            <div class="alert alert-success mt-4">Appointment booked successfully! You will receive a confirmation email.</div>
+                        {% endif %}
+                        {% if error %}
+                            <div class="alert alert-error mt-4">{{ error }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Booking Section -->
+            <div class="lg:col-span-1">
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h2 class="card-title mb-4">Book a Session</h2>
+                        {% if not is_granted('ROLE_PATIENT') %}
+                            <div class="alert alert-info">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span>Please log in as a patient to book a session</span>
+                            </div>
+                        {% else %}
+                            <form method="post" id="booking-form">
+                                <div class="form-control mb-4">
+                                    <label class="label">Select a date</label>
+                                    <input type="date" name="date" id="booking-date" class="input input-bordered w-full" min="{{ "now"|date('Y-m-d') }}" required />
+                                </div>
+                                <div class="form-control mb-4">
+                                    <label class="label">Select an hour</label>
+                                    <select name="hour" id="booking-hour" class="select select-bordered w-full" required disabled>
+                                        <option value="">Select hour</option>
+                                    </select>
+                                </div>
+                                <div class="flex justify-end">
+                                    <button type="submit" class="btn btn-primary" id="booking-submit" disabled>Book Appointment</button>
+                                </div>
+                            </form>
+                            <div id="booking-message" class="mt-4"></div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.getElementById('booking-date');
+    const hourSelect = document.getElementById('booking-hour');
+    const submitBtn = document.getElementById('booking-submit');
+    const form = document.getElementById('booking-form');
+    const messageDiv = document.getElementById('booking-message');
+
+    if (!dateInput) return;
+
+    $(dateInput).on('change', function() {
+        hourSelect.innerHTML = '<option value="">Loading...</option>';
+        hourSelect.disabled = true;
+        submitBtn.disabled = true;
+        messageDiv.innerHTML = '';
+
+        if (!dateInput.value) return;
+        $.ajax({
+            url: '{{ path('app_therapist_available_hours', {slug: therapist.slug}) }}',
+            data: { date: dateInput.value },
+            dataType: 'json',
+            success: function(data) {
+                hourSelect.innerHTML = '';
+                if (data.length === 0) {
+                    hourSelect.innerHTML = '<option value="">No available hours</option>';
+                    hourSelect.disabled = true;
+                } else {
+                    hourSelect.innerHTML = '<option value="">Select hour</option>';
+                    data.forEach(function(hour) {
+                        const opt = document.createElement('option');
+                        opt.value = hour;
+                        opt.textContent = hour;
+                        hourSelect.appendChild(opt);
+                    });
+                    hourSelect.disabled = false;
+                }
+            }
+        });
+    });
+    $(hourSelect).on('change', function() {
+        submitBtn.disabled = !hourSelect.value;
+    });
+    form && form.addEventListener('submit', function(e) {
+        if (!dateInput.value || !hourSelect.value) {
+            e.preventDefault();
+            return;
+        }
+        submitBtn.disabled = true;
+        messageDiv.innerHTML = '';
+    });
+});
+</script>
+{% endblock %} 

@@ -35,8 +35,7 @@ security:
     # Note: Only the *first* access control that matches will be used
     access_control:
          - { path: ^/panel, roles: [ROLE_THERAPIST, ROLE_ADMIN] }
-         - { path: ^/profile, roles: ROLE_USER }
-         - { path: ^/patients, roles: ROLE_THERAPIST }
+         - { path: ^/settings, roles: [ROLE_THERAPIST, ROLE_PATIENT] }
 
 when@test:
     security:

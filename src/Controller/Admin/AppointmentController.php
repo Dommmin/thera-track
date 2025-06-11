@@ -36,7 +36,7 @@ class AppointmentController extends AbstractController
             ->setParameter('role', '%ROLE_THERAPIST%')
             ->getQuery()
             ->getResult();
-        return $this->render('panel/appointments.html.twig', [
+        return $this->render('app/panel/appointments.html.twig', [
             'upcoming_appointments' => $upcomingAppointments,
             'past_appointments' => $pastAppointments,
             'therapists' => $therapists,
@@ -73,7 +73,7 @@ class AppointmentController extends AbstractController
             $this->addFlash('success', 'Appointment booked successfully!');
             return $this->redirectToRoute('panel_appointment_index');
         }
-        return $this->render('panel/appointment_new.html.twig', [
+        return $this->render('app/panel/appointment_new.html.twig', [
             'therapist' => $therapist,
             'available_slots' => $availableSlots,
             'date' => $date,
@@ -88,7 +88,7 @@ class AppointmentController extends AbstractController
         if ($user !== $appointment->getTherapist() && $user !== $appointment->getClient()) {
             throw $this->createAccessDeniedException('You do not have access to this appointment.');
         }
-        return $this->render('panel/appointment_show.html.twig', [
+        return $this->render('app/panel/appointment_show.html.twig', [
             'appointment' => $appointment,
         ]);
     }

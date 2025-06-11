@@ -1,0 +1,61 @@
+{% extends 'app/layout.html.twig' %}
+
+{% block title %}Welcome to TheraTrack{% endblock %}
+
+{% block body %}
+<div class="hero min-h-[60vh] bg-base-200 rounded-box mb-8">
+    <div class="hero-content text-center">
+        <div class="max-w-3xl">
+            <h1 class="text-5xl font-bold mb-8">
+                <span class="text-primary">Thera</span><span class="text-secondary">Track</span>
+            </h1>
+            <p class="text-xl mb-8">Your trusted platform for managing therapy appointments. Connect with professional therapists and take control of your mental health journey.</p>
+            {% if not app.user %}
+                <div class="flex gap-4 justify-center">
+                    <a href="{{ path('app_register') }}" class="btn btn-primary">Get Started</a>
+                    <a href="{{ path('app_login') }}" class="btn btn-outline">Sign In</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <div class="text-primary mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <h2 class="card-title">Easy Scheduling</h2>
+            <p>Book appointments at your convenience with our intuitive scheduling system.</p>
+        </div>
+    </div>
+
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <div class="text-secondary mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+            </div>
+            <h2 class="card-title">Professional Therapists</h2>
+            <p>Connect with qualified therapists who are committed to your well-being.</p>
+        </div>
+    </div>
+
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <div class="text-amber-300 mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+            </div>
+            <h2 class="card-title">Secure & Private</h2>
+            <p>Your privacy is our priority. All sessions and data are kept confidential.</p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

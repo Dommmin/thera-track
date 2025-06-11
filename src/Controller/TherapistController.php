@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Appointment;
 use App\Entity\User;
 use App\Repository\AppointmentRepository;
 use App\Repository\AvailabilityRepository;
@@ -25,7 +26,7 @@ class TherapistController extends AbstractController
 
         $therapists = $userRepository->findTherapists($location, $search);
 
-        return $this->render('therapist/list.html.twig', [
+        return $this->render('app/therapist/list.html.twig', [
             'therapists' => $therapists,
             'location' => $location,
             'search' => $search,
@@ -45,7 +46,6 @@ class TherapistController extends AbstractController
             throw $this->createNotFoundException('Therapist not found');
         }
 
-        // Wybór dnia (domyślnie dziś)
         $date = $request->query->get('date') ? new \DateTime($request->query->get('date')) : new \DateTime();
         $availableSlots = $availabilityRepository->findAvailableSlots($therapist, $date);
 
@@ -69,7 +69,7 @@ class TherapistController extends AbstractController
                     if ($existing) {
                         $error = 'This slot is already booked.';
                     } else {
-                        $appointment = new \App\Entity\Appointment();
+                        $appointment = new Appointment();
                         $appointment->setTherapist($therapist);
                         $appointment->setClient($this->getUser());
                         $appointment->setStartTime($dateObj);
@@ -85,7 +85,7 @@ class TherapistController extends AbstractController
             }
         }
 
-        return $this->render('therapist/show.html.twig', [
+        return $this->render('app/therapist/show.html.twig', [
             'therapist' => $therapist,
             'date' => $date,
             'available_slots' => $availableSlots,
@@ -94,13 +94,9 @@ class TherapistController extends AbstractController
         ]);
     }
 
-    #[Route('/{slug}/available-hours', name: 'app_therapist_available_hours', methods: ['GET'])]
-    public function availableHours(
-        User $therapist,
-        Request $request,
-        AvailabilityRepository $availabilityRepository,
-        AppointmentRepository $appointmentRepository
-    ): Response {
+    #[Route('/{slug}/available-hours', name: 'available_hours', methods: ['GET'])]
+    public function availableHours(#[MapEntity(mapping: ['slug' => 'slug'])] User $therapist, Request $request, AvailabilityRepository $availabilityRepository, AppointmentRepository $appointmentRepository): Response
+    {
         $dateStr = $request->query->get('date');
         if (!$dateStr) {
             return $this->json(['error' => 'Missing date'], 400);

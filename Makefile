@@ -1,4 +1,4 @@
-.PHONY: up down migrate test setup-test-db
+.PHONY: up down migrate test setup-test-db drop create recreate fixtures
 
 # Start the application
 up:
@@ -33,3 +33,14 @@ logs:
 # Enter app container
 shell:
 	docker compose exec app bash
+
+drop:
+	docker compose exec app php bin/console doctrine:database:drop --force
+
+create:
+	docker compose exec app php bin/console doctrine:database:create
+
+recreate: drop create
+
+fixtures:
+	docker compose exec app php bin/console doctrine:fixtures:load

@@ -61,10 +61,10 @@ class TherapistController extends AbstractController
                 $entityManager->flush();
                 $this->addFlash('success', 'Availability added successfully!');
                 return $this->redirectToRoute('app_therapist_availability');
-            } else {
-                foreach ($errors as $err) {
-                    $this->addFlash('danger', $err);
-                }
+            }
+
+            foreach ($errors as $err) {
+                $this->addFlash('danger', $err);
             }
         }
 
@@ -97,7 +97,7 @@ class TherapistController extends AbstractController
             return $this->redirectToRoute('app_therapist_settings');
         }
 
-        return $this->render('therapist/settings.html.twig', [
+        return $this->render('app/therapist/settings.html.twig', [
             'user' => $user,
             'form' => $form,
         ]);
@@ -113,7 +113,7 @@ class TherapistController extends AbstractController
 
         $appointments = $availabilityRepository->findAvailableSlots($user, new \DateTime());
 
-        return $this->render('therapist/calendar.html.twig', [
+        return $this->render('app/therapist/calendar.html.twig', [
             'appointments' => json_encode($appointments),
         ]);
     }
@@ -169,36 +169,4 @@ class TherapistController extends AbstractController
 
         return $this->redirectToRoute('app_therapist_availability');
     }
-
-//    #[Route('/', name: 'app_therapist_list', methods: ['GET'])]
-//    public function list(Request $request, UserRepository $userRepository): Response
-//    {
-//        $location = $request->query->get('location');
-//        $search = $request->query->get('search');
-//
-//        $therapists = $userRepository->findTherapists($location, $search);
-//
-//        return $this->render('therapist/list.html.twig', [
-//            'therapists' => $therapists,
-//            'location' => $location,
-//            'search' => $search,
-//        ]);
-//    }
-
-//    #[Route('/{slug}', name: 'app_therapist_show', methods: ['GET'])]
-//    public function show(User $therapist): Response
-//    {
-//        if (!in_array('ROLE_THERAPIST', $therapist->getRoles())) {
-//            throw $this->createNotFoundException('Therapist not found');
-//        }
-//
-//        // Prevent therapists from viewing other therapists' profiles
-//        if ($this->isGranted('ROLE_THERAPIST') && $therapist !== $this->getUser()) {
-//            throw $this->createAccessDeniedException('You cannot view other therapists\' profiles.');
-//        }
-//
-//        return $this->render('therapist/show.html.twig', [
-//            'therapist' => $therapist,
-//        ]);
-//    }
 }

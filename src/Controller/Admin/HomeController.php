@@ -11,7 +11,7 @@ final class HomeController extends AbstractController
     #[Route('/panel', name: 'app_panel')]
     public function index(): Response
     {
-        return $this->render('panel/index.html.twig', [
+        return $this->render('panel/dashboard/index.html.twig', [
             'controller_name' => 'PanelController',
         ]);
     }

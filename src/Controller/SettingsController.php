@@ -53,7 +53,7 @@ class SettingsController extends AbstractController
             return $this->redirectToRoute('app_settings');
         }
 
-        return $this->render('settings/index.html.twig', [
+        return $this->render('app/settings/index.html.twig', [
             'form' => $form->createView(),
         ]);
     }

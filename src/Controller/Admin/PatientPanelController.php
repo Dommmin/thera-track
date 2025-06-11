@@ -3,6 +3,7 @@
 namespace App\Controller\Admin;
 
 use App\Entity\Appointment;
+use App\Entity\User;
 use App\Repository\AppointmentRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -18,7 +19,9 @@ class PatientPanelController extends AbstractController
     #[Route('/appointments', name: 'panel_patient_appointments', methods: ['GET'])]
     public function appointments(AppointmentRepository $appointmentRepository): Response
     {
+        /** @var User $user */
         $user = $this->getUser();
+
         $upcomingAppointments = $appointmentRepository->findUpcomingAppointments($user);
         $pastAppointments = $appointmentRepository->findPastAppointments($user);
         return $this->render('panel/patient_appointments.html.twig', [

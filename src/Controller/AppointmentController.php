@@ -44,7 +44,7 @@ class AppointmentController extends AbstractController
             ->getQuery()
             ->getResult();
 
-        return $this->render('appointment/index.html.twig', [
+        return $this->render('app/appointment/index.html.twig', [
             'upcoming_appointments' => $upcomingAppointments,
             'past_appointments' => $pastAppointments,
             'therapists' => $therapists,
@@ -95,7 +95,7 @@ class AppointmentController extends AbstractController
             return $this->redirectToRoute('app_appointment_index');
         }
 
-        return $this->render('appointment/new.html.twig', [
+        return $this->render('app/appointment/new.html.twig', [
             'therapist' => $therapist,
             'available_slots' => $availableSlots,
             'date' => $date,
@@ -113,7 +113,7 @@ class AppointmentController extends AbstractController
             throw $this->createAccessDeniedException('You do not have access to this appointment.');
         }
 
-        return $this->render('appointment/show.html.twig', [
+        return $this->render('app/appointment/show.html.twig', [
             'appointment' => $appointment,
         ]);
     }

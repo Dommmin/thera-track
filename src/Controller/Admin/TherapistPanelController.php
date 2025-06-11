@@ -19,7 +19,7 @@ class TherapistPanelController extends AbstractController
         $location = $request->query->get('location');
         $search = $request->query->get('search');
         $therapists = $userRepository->findTherapists($location, $search);
-        return $this->render('panel/therapists.html.twig', [
+        return $this->render('app/panel/therapists.html.twig', [
             'therapists' => $therapists,
             'location' => $location,
             'search' => $search,
@@ -32,7 +32,7 @@ class TherapistPanelController extends AbstractController
         if (!in_array('ROLE_THERAPIST', $therapist->getRoles())) {
             throw $this->createNotFoundException('Therapist not found');
         }
-        return $this->render('panel/therapist_show.html.twig', [
+        return $this->render('app/panel/therapist_show.html.twig', [
             'therapist' => $therapist,
         ]);
     }
