@@ -5,12 +5,14 @@ namespace App\Service;
 use App\Entity\Appointment;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
+use Twig\Environment;
 
 class EmailService
 {
     public function __construct(
         private MailerInterface $mailer,
-        private string $appName = 'TheraTrack'
+        private string $appName = 'TheraTrack',
+        private ?Environment $twig = null
     ) {
     }
 
@@ -46,14 +48,17 @@ class EmailService
 
     public function sendAppointmentReminder(Appointment $appointment): void
     {
+        $html = $this->twig->render('emails/appointment_reminder.html.twig', [
+            'appointment' => $appointment
+        ]);
         $this->sendEmail(
             $appointment->getClient()->getEmail(),
             'Appointment Reminder',
-            $this->getReminderTemplate($appointment)
+            $html
         );
     }
 
-    private function sendEmail(string $to, string $subject, string $html): void
+    public function sendEmail(string $to, string $subject, string $html): void
     {
         $email = (new Email())
             ->from('noreply@' . $this->appName . '.com')

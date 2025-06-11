@@ -2,6 +2,7 @@
 
 namespace App\Command;
 
+use App\Entity\Appointment;
 use App\Repository\AppointmentRepository;
 use App\Service\EmailService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -31,7 +32,7 @@ class SendAppointmentRemindersCommand extends Command
 
         $qb = $this->entityManager->createQueryBuilder();
         $qb->select('a')
-            ->from('App\\Entity\\Appointment', 'a')
+            ->from(Appointment::class, 'a')
             ->where('a.startTime >= :tomorrow')
             ->andWhere('a.startTime < :dayAfter')
             ->andWhere('a.status = :status')
@@ -43,6 +44,13 @@ class SendAppointmentRemindersCommand extends Command
         $count = 0;
         foreach ($appointments as $appointment) {
             $this->emailService->sendAppointmentReminder($appointment);
+            $output->writeln(sprintf(
+                'Reminder sent to %s for appointment with %s on %s at %s',
+                $appointment->getClient()->getEmail(),
+                $appointment->getTherapist()->getFullName(),
+                $appointment->getStartTime()->format('Y-m-d'),
+                $appointment->getStartTime()->format('H:i')
+            ));
             $count++;
         }
         $output->writeln("Sent $count reminders.");

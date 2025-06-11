@@ -1,0 +1,13 @@
+<h1>Appointment Reminder</h1>
+<p><strong>Patient:</strong> {{ appointment.client.fullName }}</p>
+<p><strong>Therapist:</strong> {{ appointment.therapist.fullName }}</p>
+<p><strong>Date:</strong> {{ appointment.startTime|date('Y-m-d') }}</p>
+<p><strong>Time:</strong> {{ appointment.startTime|date('H:i') }} - {{ appointment.endTime|date('H:i') }}</p>
+<p><strong>Status:</strong> {{ appointment.status.value|title }}</p>
+{% if appointment.therapist.location %}
+    <p><strong>Location:</strong> {{ appointment.therapist.location }}</p>
+{% endif %}
+{% if appointment.notes %}
+    <p><strong>Notes:</strong> {{ appointment.notes }}</p>
+{% endif %}
+<p>Please arrive on time. If you need to cancel, do so at least 24 hours in advance.</p> 
