@@ -4,7 +4,6 @@ namespace App\Controller\Admin;
 
 use App\Entity\Availability;
 use App\Entity\User;
-use App\Form\ProfileForm;
 use App\Repository\AvailabilityRepository;
 use App\Service\GoogleCalendarService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -69,52 +68,11 @@ class TherapistController extends AbstractController
         }
 
         $excludedDates = $availabilityRepository->findExcludedDates($user);
-        // Możesz też pobrać wszystkie dostępności terapeuty:
         $availabilities = $availabilityRepository->findBy(['therapist' => $user], ['dayOfWeek' => 'ASC', 'startHour' => 'ASC']);
 
-        return $this->render('panel/availability.html.twig', [
+        return $this->render('panel/availability/index.html.twig', [
             'excluded_dates' => $excludedDates,
             'availabilities' => $availabilities,
-        ]);
-    }
-
-    #[Route('/settings', name: 'app_therapist_settings', methods: ['GET', 'POST'])]
-    #[IsGranted('ROLE_THERAPIST')]
-    public function settings(Request $request, EntityManagerInterface $entityManager): Response
-    {
-        /** @var User $user */
-        $user = $this->getUser();
-
-        $form = $this->createForm(ProfileForm::class, $user);
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($user);
-            $entityManager->flush();
-
-            $this->addFlash('success', 'Your profile has been updated successfully.');
-
-            return $this->redirectToRoute('app_therapist_settings');
-        }
-
-        return $this->render('app/therapist/settings.html.twig', [
-            'user' => $user,
-            'form' => $form,
-        ]);
-    }
-
-    #[Route('/calendar', name: 'app_therapist_calendar', methods: ['GET'])]
-    public function calendar(
-        Request $request,
-        AvailabilityRepository $availabilityRepository
-    ): Response {
-        /** @var User $user */
-        $user = $this->getUser();
-
-        $appointments = $availabilityRepository->findAvailableSlots($user, new \DateTime());
-
-        return $this->render('app/therapist/calendar.html.twig', [
-            'appointments' => json_encode($appointments),
         ]);
     }
 

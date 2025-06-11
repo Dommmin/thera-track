@@ -33,7 +33,7 @@ class Appointment
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $notes = null;
 
-    #[ORM\Column(type: 'string', enumType: AppointmentStatus::class, length: 20)]
+    #[ORM\Column(type: 'string', length: 20, enumType: AppointmentStatus::class)]
     private AppointmentStatus $status = AppointmentStatus::SCHEDULED;
 
     #[ORM\Column]
