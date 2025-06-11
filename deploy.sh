@@ -103,7 +103,7 @@ php bin/console cache:clear --env=prod --no-debug --no-warmup
 php bin/console cache:warmup --env=prod --no-debug
 
 # Set permissions on newly created cache
-chown -R $APP_USER:$APP_GROUP "$SHARED_DIR/var/cache" "$SHARED_DIR/var/log" "$SHARED_DIR/var/sessions"
+chown -R $APP_USER:$APP_GROUP "$SHARED_DIR/var/cache" "$SHARED_DIR/var/sessions"
 chmod -R 775 "$SHARED_DIR/var/cache" "$SHARED_DIR/var/sessions"
 
 # Check if database is available before running migrations
