@@ -13,43 +13,98 @@ NOW=$(date +%Y-%m-%d-%H%M%S)-$(openssl rand -hex 3)
 RELEASE_DIR="$RELEASES_DIR/$NOW"
 ARCHIVE_NAME="release.tar.gz"
 
+# Function to rollback in case of error
+rollback() {
+    echo "❌ Deployment failed. Starting rollback..."
+    if [ -L "$CURRENT_LINK.backup" ]; then
+        mv "$CURRENT_LINK.backup" "$CURRENT_LINK"
+        echo "✅ Rollback completed"
+    fi
+    exit 1
+}
+
+# Set trap for error handling
+trap rollback ERR
+
+echo "▶️ Starting deployment: $NOW"
+
 echo "▶️ Create directories..."
 mkdir -p "$RELEASES_DIR" "$SHARED_DIR/var/cache" "$SHARED_DIR/var/log" "$SHARED_DIR/var/sessions" "$SHARED_DIR/public/uploads"
 
+# Verify archive exists
+if [ ! -f "$APP_BASE/$ARCHIVE_NAME" ]; then
+    echo "❌ Archive $APP_BASE/$ARCHIVE_NAME not found!"
+    exit 1
+fi
+
 echo "▶️ Unpacking release..."
 mkdir -p "$RELEASE_DIR"
-tar -xzf "$APP_BASE/$ARCHIVE_NAME" -C "$RELEASE_DIR"
+if ! tar -xzf "$APP_BASE/$ARCHIVE_NAME" -C "$RELEASE_DIR"; then
+    echo "❌ Failed to extract release archive"
+    exit 1
+fi
 rm -f "$APP_BASE/$ARCHIVE_NAME"
+
+# Verify .env exists in shared directory
+if [ ! -f "$SHARED_DIR/.env" ]; then
+    echo "❌ .env file not found in shared directory: $SHARED_DIR/.env"
+    echo "Please ensure .env file is uploaded to shared directory first"
+    exit 1
+fi
 
 # Link shared files and directories
 echo "▶️ Linking shared files..."
 ln -sf "$SHARED_DIR/.env" "$RELEASE_DIR/.env"
 
+# Verify .env link was created
+if [ ! -L "$RELEASE_DIR/.env" ]; then
+    echo "❌ Failed to create .env symlink"
+    exit 1
+fi
+
+# Handle var directory
 if [ -d "$RELEASE_DIR/var" ]; then
     rm -rf "$RELEASE_DIR/var"
 fi
 ln -sf "$SHARED_DIR/var" "$RELEASE_DIR/var"
 
+# Handle uploads directory
 mkdir -p "$RELEASE_DIR/public"
 if [ -d "$RELEASE_DIR/public/uploads" ]; then
     rm -rf "$RELEASE_DIR/public/uploads"
 fi
 ln -sf "$SHARED_DIR/public/uploads" "$RELEASE_DIR/public/uploads"
 
-# Clear cache and warmup with proper environment
-echo "▶️ Clearing cache..."
-cd "$RELEASE_DIR"
+# Verify we can access the release directory
+cd "$RELEASE_DIR" || {
+    echo "❌ Cannot access release directory: $RELEASE_DIR"
+    exit 1
+}
 
-# Upewnij się, że bin/console jest wykonywalny
+# Verify Symfony structure
+if [ ! -f "bin/console" ]; then
+    echo "❌ Symfony console not found in release"
+    exit 1
+fi
+
+# Make console executable
 chmod +x bin/console
 
-# Wyczyść cache z właściwym środowiskiem
+# Verify PHP can access the application
+echo "▶️ Verifying Symfony installation..."
+if ! php bin/console --version >/dev/null 2>&1; then
+    echo "❌ Symfony application is not working properly"
+    exit 1
+fi
+
+# Clear cache and warmup with proper environment
+echo "▶️ Clearing cache..."
 php bin/console cache:clear --env=prod --no-debug --no-warmup
 php bin/console cache:warmup --env=prod --no-debug
 
 # Set permissions on newly created cache
-chown -R $APP_USER:$APP_GROUP "$SHARED_DIR/var/cache"
-chmod -R 775 "$SHARED_DIR/var/cache"
+chown -R $APP_USER:$APP_GROUP "$SHARED_DIR/var/cache" "$SHARED_DIR/var/log" "$SHARED_DIR/var/sessions"
+chmod -R 775 "$SHARED_DIR/var/cache" "$SHARED_DIR/var/log" "$SHARED_DIR/var/sessions"
 
 # Check if database is available before running migrations
 echo "▶️ Checking database connection..."
@@ -60,39 +115,87 @@ else
     echo "⚠️ Database not available, skipping migrations"
 fi
 
-# Atomic symlink update
+# Backup current symlink BEFORE changing it
+echo "▶️ Backing up current symlink..."
+if [ -L "$CURRENT_LINK" ]; then
+    cp -P "$CURRENT_LINK" "$CURRENT_LINK.backup" 2>/dev/null || true
+    echo "Current deployment backed up: $(readlink $CURRENT_LINK 2>/dev/null || echo 'none')"
+fi
+
+# Atomic symlink update with verification
 echo "▶️ Updating current symlink..."
 TEMP_LINK="$CURRENT_LINK.tmp.$$"
-ln -sf "$RELEASE_DIR" "$TEMP_LINK"
-mv "$TEMP_LINK" "$CURRENT_LINK"
 
-#echo "▶️ Restarting PHP-FPM to apply new code..."
-#if sudo systemctl restart php8.3-fpm; then
-#    echo "✅ PHP-FPM restarted successfully"
-#else
-#    echo "❌ Failed to restart PHP-FPM!"
-#    exit 1
-#fi
+# Create temporary symlink
+if ! ln -sf "$RELEASE_DIR" "$TEMP_LINK"; then
+    echo "❌ Failed to create temporary symlink"
+    exit 1
+fi
 
-# Backup current symlink for potential rollback
-cp -P "$CURRENT_LINK" "$CURRENT_LINK.backup" 2>/dev/null || true
+# Verify temporary symlink points to correct location
+if [ "$(readlink $TEMP_LINK)" != "$RELEASE_DIR" ]; then
+    echo "❌ Temporary symlink verification failed"
+    rm -f "$TEMP_LINK"
+    exit 1
+fi
+
+# Atomic move - this should be atomic on most filesystems
+if ! mv "$TEMP_LINK" "$CURRENT_LINK"; then
+    echo "❌ Failed to update current symlink"
+    rm -f "$TEMP_LINK"
+    exit 1
+fi
+
+# Final verification
+ACTUAL_TARGET=$(readlink "$CURRENT_LINK" 2>/dev/null || echo "FAILED")
+if [ "$ACTUAL_TARGET" != "$RELEASE_DIR" ]; then
+    echo "❌ Symlink verification failed!"
+    echo "Expected: $RELEASE_DIR"
+    echo "Actual: $ACTUAL_TARGET"
+    rollback
+fi
+
+echo "✅ Symlink updated successfully"
+
+# Optional: Test the deployment
+echo "▶️ Testing deployment..."
+if ! php "$CURRENT_LINK/bin/console" --version >/dev/null 2>&1; then
+    echo "❌ Deployment test failed - application not working"
+    rollback
+fi
 
 echo "▶️ Cleaning old releases (keeping 5 latest)..."
 cd "$RELEASES_DIR"
 if ls -dt */ >/dev/null 2>&1; then
-    ls -dt */ | tail -n +6 | xargs -r rm -rf
+    # Keep 5 latest releases
+    ls -dt */ | tail -n +6 | while read -r dir; do
+        if [ -d "$dir" ]; then
+            echo "Removing old release: $dir"
+            rm -rf "$dir"
+        fi
+    done
 fi
 
 # Restart Supervisor services if supervisor is installed
 echo "▶️ Restarting Supervisor services..."
 if command -v supervisorctl >/dev/null 2>&1; then
-    sudo supervisorctl restart all || echo "⚠️ Failed to restart supervisor services"
+    if sudo supervisorctl restart all; then
+        echo "✅ Supervisor services restarted"
+    else
+        echo "⚠️ Failed to restart some supervisor services (non-critical)"
+    fi
 else
     echo "⚠️ Supervisor not found, skipping restart"
 fi
 
-echo "✅ Deployment successful: $NOW"
-echo "📍 New release deployed to: $RELEASE_DIR"
-echo "🔗 Current symlink points to: $(readlink $CURRENT_LINK)"
+# Clean up backup if everything succeeded
+rm -f "$CURRENT_LINK.backup"
+
+echo ""
+echo "🎉 Deployment successful!"
+echo "📍 Release: $NOW"
+echo "📂 Deployed to: $RELEASE_DIR"
+echo "🔗 Current symlink: $(readlink $CURRENT_LINK)"
+echo "🕐 Completed at: $(date)"
 
 exit 0
