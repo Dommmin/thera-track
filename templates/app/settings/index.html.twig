@@ -47,7 +47,9 @@
                 <h2 class="card-title">Professional Settings</h2>
 
                 <div class="form-control">
-                    {{ form_label(form.hourlyRate, 'Hourly Rate', {'label_attr': {'class': 'label'}}) }}
+                    <div>
+                        {{ form_label(form.hourlyRate, 'Hourly Rate', {'label_attr': {'class': 'label'}}) }}
+                    </div>
                     <div class="join">
                         <span class="join-item btn btn-disabled">$</span>
                         {{ form_widget(form.hourlyRate, {'attr': {'class': 'input input-bordered join-item w-full'}}) }}
@@ -61,20 +63,15 @@
                     {{ form_errors(form.bio) }}
                 </div>
             </div>
-        </div>
-        {% endif %}
 
-        {% if is_granted('ROLE_THERAPIST') %}
-        <div class="card bg-base-200">
-            <div class="card-body">
-                <div class="form-control">
-                    {{ form_label(form.location, 'Location', {'label_attr': {'class': 'label'}}) }}
-                    {{ form_widget(form.location, {'attr': {'class': 'input input-bordered w-full', 'id': 'location-input'}}) }}
-                    {{ form_errors(form.location) }}
+            <div class="card bg-base-200">
+                <div class="card-body">
+                    <div class="form-control">
+                        {{ form_label(form.location, 'Location', {'label_attr': {'class': 'label'}}) }}
+                        {{ form_widget(form.location, {'attr': {'class': 'input input-bordered w-full', 'id': 'location-input'}}) }}
+                        {{ form_errors(form.location) }}
+                    </div>
                 </div>
-                <div id="map" style="height: 300px; margin-top: 1rem;"></div>
-                {{ form_widget(form.latitude) }}
-                {{ form_widget(form.longitude) }}
             </div>
         </div>
         {% endif %}
@@ -85,32 +82,4 @@
         </div>
         {{ form_end(form) }}
     </div>
-{% endblock %}
-
-{% block javascripts %}
-    {{ parent() }}
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var lat = parseFloat(document.getElementById('profile_form_latitude').value) || 52.2297;
-            var lng = parseFloat(document.getElementById('profile_form_longitude').value) || 21.0122;
-            var map = L.map('map').setView([lat, lng], 6);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '© OpenStreetMap'
-            }).addTo(map);
-            var marker = L.marker([lat, lng], {draggable:true}).addTo(map);
-            marker.on('dragend', function(e) {
-                var position = marker.getLatLng();
-                document.getElementById('profile_form_latitude').value = position.lat;
-                document.getElementById('profile_form_longitude').value = position.lng;
-            });
-            map.on('click', function(e) {
-                marker.setLatLng(e.latlng);
-                document.getElementById('profile_form_latitude').value = e.latlng.lat;
-                document.getElementById('profile_form_longitude').value = e.latlng.lng;
-            });
-        });
-    </script>
 {% endblock %}

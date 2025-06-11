@@ -17,7 +17,6 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use App\Dto\Appointment\CreateAppointmentDto;
 use App\Manager\AppointmentManager;
-use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use App\Dto\Appointment\CancelAppointmentDto;
 
 #[Route('/appointments')]
@@ -49,13 +48,14 @@ class AppointmentController extends AbstractController
 
     #[Route('/new', name: 'app_appointment_new', methods: ['POST'])]
     #[IsGranted('ROLE_USER')]
-    public function new(
-        #[MapRequestPayload] CreateAppointmentDto $dto,
-        AppointmentManager $appointmentManager,
-        EmailService $emailService
-    ): Response {
+    public function new(Request $request, AppointmentManager $appointmentManager, EmailService $emailService): Response
+    {
         /** @var User $user */
         $user = $this->getUser();
+        $dto = new CreateAppointmentDto();
+        $dto->therapistId = $request->request->get('therapistId');
+        $dto->date = $request->request->get('date');
+        $dto->hour = $request->request->get('hour');
         $appointment = $appointmentManager->createFromDto($dto, $user);
         $emailService->sendAppointmentConfirmation($appointment);
         $this->addFlash('success', 'Appointment booked successfully!');
@@ -80,13 +80,12 @@ class AppointmentController extends AbstractController
 
     #[Route('/cancel', name: 'app_appointment_cancel', methods: ['POST'])]
     #[IsGranted('ROLE_USER')]
-    public function cancel(
-        #[MapRequestPayload] CancelAppointmentDto $dto,
-        AppointmentManager $appointmentManager,
-        EmailService $emailService
-    ): Response {
+    public function cancel(Request $request, AppointmentManager $appointmentManager, EmailService $emailService): Response
+    {
         /** @var User $user */
         $user = $this->getUser();
+        $dto = new CancelAppointmentDto();
+        $dto->appointmentId = $request->request->get('appointmentId');
         $appointment = $appointmentManager->cancelByDto($dto, $user);
         $emailService->sendAppointmentCancellation($appointment);
         $this->addFlash('success', 'Appointment cancelled successfully.');

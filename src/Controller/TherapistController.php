@@ -17,7 +17,6 @@ use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use App\Entity\AppointmentStatus;
 use App\Dto\Therapist\BookAppointmentDto;
 use App\Manager\AppointmentManager;
-use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use App\Service\AvailabilityService;
 
@@ -63,8 +62,7 @@ class TherapistController extends AbstractController
         AppointmentRepository $appointmentRepository,
         EntityManagerInterface $entityManager,
         EmailService $emailService,
-        ValidatorInterface $validator,
-        #[MapRequestPayload] ?BookAppointmentDto $dto = null
+        ValidatorInterface $validator
     ): Response {
         if (!in_array('ROLE_THERAPIST', $therapist->getRoles())) {
             throw $this->createNotFoundException('Therapist not found');
@@ -77,20 +75,19 @@ class TherapistController extends AbstractController
         $error = null;
 
         if ($request->isMethod('POST') && $this->isGranted('ROLE_PATIENT')) {
-            if ($dto) {
-                $errors = $validator->validate($dto);
-                if (count($errors) > 0) {
-                    $error = (string) $errors;
-                } else {
-                    $result = $this->appointmentManager->bookAppointmentForTherapistPage($dto, $therapist, $this->getUser());
-                    $success = $result['success'];
-                    $error = $result['error'];
-                    if ($result['success']) {
-                        $emailService->sendAppointmentConfirmation($result['appointment']);
-                    }
-                }
+            $dto = new BookAppointmentDto();
+            $dto->date = $request->request->get('date');
+            $dto->hour = $request->request->get('hour');
+            $errors = $validator->validate($dto);
+            if (count($errors) > 0) {
+                $error = (string) $errors;
             } else {
-                $error = 'Invalid data.';
+                $result = $this->appointmentManager->bookAppointmentForTherapistPage($dto, $therapist, $this->getUser());
+                $success = $result['success'];
+                $error = $result['error'];
+                if ($result['success']) {
+                    $emailService->sendAppointmentConfirmation($result['appointment']);
+                }
             }
         }
 

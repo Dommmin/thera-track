@@ -29,6 +29,10 @@
                     {{ appointment.status.value|title }}
                 </span>
             </div>
+            <div class="mb-4">
+                <span class="font-semibold">Price:</span>
+                {{ appointment.price|number_format(2, '.', ' ') }} PLN
+            </div>
             {% if appointment.notes %}
                 <div class="mb-4">
                     <span class="font-semibold">Notes:</span>
@@ -36,11 +40,14 @@
                 </div>
             {% endif %}
             <div class="flex justify-between items-center mt-6">
-                <a href="{{ path('app_appointment_index') }}" class="btn btn-ghost">Back to Appointments</a>
+                <a href="{{ path('app_appointment_index') }}" class="btn btn-neutral btn-sm btn-outline">Back to Appointments</a>
                 {% if appointment.status.value != 'cancelled' and appointment.status.value != 'in_progress' %}
                     <form method="post" action="{{ path('app_appointment_cancel', {id: appointment.id}) }}" onsubmit="return confirm('Are you sure you want to cancel this appointment?');">
                         <input type="hidden" name="_token" value="{{ csrf_token('cancel' ~ appointment.id) }}">
-                        <button type="submit" class="btn btn-error">Cancel Appointment</button>
+                        <input type="hidden" name="appointmentId" value="{{ appointment.id }}">
+                        {% if is_granted('cancel', appointment) %}
+                            <button type="submit" class="btn btn-error">Cancel Appointment</button>
+                        {% endif %}
                     </form>
                 {% endif %}
             </div>

@@ -11,6 +11,7 @@ use App\Repository\UserRepository;
 use App\Repository\AppointmentRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 class AppointmentManager
 {
@@ -50,7 +51,7 @@ class AppointmentManager
             throw new \InvalidArgumentException('Appointment not found');
         }
         if (!$this->authChecker->isGranted('cancel', $appointment)) {
-            throw new \Symfony\Component\Security\Core\Exception\AccessDeniedException('You cannot cancel this appointment.');
+            throw new AccessDeniedException('You cannot cancel this appointment.');
         }
         $appointment->setStatus(AppointmentStatus::CANCELLED);
         $this->em->flush();

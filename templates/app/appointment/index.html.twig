@@ -58,12 +58,18 @@
                         {% endif %}
                     </div>
 
-                    <div class="card-actions justify-end">
-                        <form method="post" action="{{ path('app_appointment_cancel', {'id': appointment.id}) }}" class="inline" onsubmit="return confirm('Are you sure you want to cancel this appointment?');">
-                            <input type="hidden" name="_token" value="{{ csrf_token('cancel' ~ appointment.id) }}">
-                            <button type="submit" class="btn btn-error btn-sm">Cancel</button>
-                        </form>
-                        <a href="{{ path('app_appointment_show', {'id': appointment.id}) }}" class="btn btn-primary btn-sm">View Details</a>
+                    <div class="flex justify-between items-center mt-4">
+                        <span class="text-sm font-bold">{{ appointment.price|number_format(2, '.', ' ') }} PLN</span>
+                        <div class="flex gap-2">
+                            {% if is_granted('cancel', appointment) %}
+                                <form method="post" action="{{ path('app_appointment_cancel', {'id': appointment.id}) }}" class="inline" onsubmit="return confirm('Are you sure you want to cancel this appointment?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('cancel' ~ appointment.id) }}">
+                                    <input type="hidden" name="appointmentId" value="{{ appointment.id }}">
+                                    <button type="submit" class="btn btn-error btn-sm">Cancel</button>
+                                </form>
+                            {% endif %}
+                            <a href="{{ path('app_appointment_show', {'id': appointment.id}) }}" class="btn btn-primary btn-sm">View Details</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -112,8 +118,11 @@
                         {% endif %}
                     </div>
 
-                    <div class="card-actions justify-end">
-                        <a href="{{ path('app_appointment_show', {'id': appointment.id}) }}" class="btn btn-primary btn-sm">View Details</a>
+                    <div class="flex justify-between items-center mt-4">
+                        <span class="text-sm font-bold">{{ appointment.price|number_format(2, '.', ' ') }} PLN</span>
+                        <div class="flex gap-2">
+                            <a href="{{ path('app_appointment_show', {'id': appointment.id}) }}" class="btn btn-primary btn-sm">View Details</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -160,8 +169,11 @@
                             </div>
                         {% endif %}
                     </div>
-                    <div class="card-actions justify-end">
-                        <a href="{{ path('app_appointment_show', {'id': appointment.id}) }}" class="btn btn-primary btn-sm">View Details</a>
+                    <div class="flex justify-between items-center mt-4">
+                        <span class="text-sm font-bold">{{ appointment.price|number_format(2, '.', ' ') }} PLN</span>
+                        <div class="flex gap-2">
+                            <a href="{{ path('app_appointment_show', {'id': appointment.id}) }}" class="btn btn-primary btn-sm">View Details</a>
+                        </div>
                     </div>
                 </div>
             </div>
