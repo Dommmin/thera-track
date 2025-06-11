@@ -43,6 +43,9 @@
                                 {% if is_granted('ROLE_THERAPIST') %}
                                     <li><a href="{{ path('app_panel') }}">Panel</a></li>
                                 {% endif %}
+                                {% if is_granted('ROLE_PATIENT') %}
+                                    <li><a href="{{ path('app_appointment_index') }}">My Appointments</a></li>
+                                {% endif %}
                                 <li><a href="{{ path('app_settings') }}">Settings</a></li>
                                 <li><a href="{{ path('app_logout') }}">Logout</a></li>
                             </ul>
