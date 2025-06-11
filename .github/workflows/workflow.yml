@@ -33,9 +33,19 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-composer-
 
-      - name: Create .env file from GitHub Variables
+      - name: Create .env file for build
         run: |
-          echo "${{ vars.ENV_FILE }}" > .env
+          printf '%s\n' '${{ vars.ENV_FILE }}' > .env
+          # Clean up potential issues
+          sed -i 's/\r$//' .env
+          sed -i '/^$/d' .env
+
+      - name: Verify .env file
+        run: |
+          echo "=== .env file content ==="
+          cat .env
+          echo "========================="
+          echo "File size: $(wc -c < .env) bytes"
 
       - name: Install Composer dependencies (skip scripts)
         run: |
@@ -82,9 +92,23 @@ jobs:
           name: release
           path: .
 
-      - name: Create .env file from GitHub Variables
+      - name: Create production .env file
         run: |
-          echo "${{ vars.ENV_FILE }}" > .env
+          printf '%s\n' '${{ vars.ENV_FILE }}' > .env
+          # Clean up potential issues
+          sed -i 's/\r$//' .env
+          sed -i '/^$/d' .env
+
+      - name: Verify .env file before upload
+        run: |
+          echo "=== Production .env file content ==="
+          cat .env
+          echo "=================================="
+          echo "File size: $(wc -c < .env) bytes"
+          if [ ! -s .env ]; then
+            echo "ERROR: .env file is empty!"
+            exit 1
+          fi
 
       - name: Upload release to server
         run: |
@@ -93,6 +117,19 @@ jobs:
       - name: Upload .env file to shared directory
         run: |
           scp -P ${{ secrets.SSH_PORT }} .env ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/home/${{ secrets.SSH_USER }}/symfony/shared/.env
+
+      - name: Verify .env file on server
+        run: |
+          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} '
+            echo "=== .env file on server ==="
+            cat /home/${{ secrets.SSH_USER }}/symfony/shared/.env
+            echo "=========================="
+            echo "File size: $(wc -c < /home/${{ secrets.SSH_USER }}/symfony/shared/.env) bytes"
+            if [ ! -s /home/${{ secrets.SSH_USER }}/symfony/shared/.env ]; then
+              echo "ERROR: .env file on server is empty!"
+              exit 1
+            fi
+          '
 
       - name: Run deploy script on server
         run: |
