@@ -52,40 +52,36 @@ class TherapistController extends AbstractController
         $success = false;
         $error = null;
         if ($request->isMethod('POST') && $this->isGranted('ROLE_PATIENT')) {
-            $slotId = $request->request->get('slot_id');
-            $slot = null;
-            foreach ($availableSlots as $s) {
-                if ($s->getId() == $slotId) {
-                    $slot = $s;
-                    break;
-                }
-            }
-            if ($slot) {
-                // Sprawdź, czy slot nie jest już zajęty
-                $existing = $appointmentRepository->findOneBy([
-                    'therapist' => $therapist,
-                    'startTime' => (clone $date)->setTime((int)$slot->getStartHour()->format('H'), (int)$slot->getStartHour()->format('i'))
-                ]);
-                if ($existing) {
-                    $error = 'This slot is already booked.';
-                } else {
-                    $appointment = new \App\Entity\Appointment();
-                    $appointment->setTherapist($therapist);
-                    $appointment->setClient($this->getUser());
-                    $start = (clone $date)->setTime((int)$slot->getStartHour()->format('H'), (int)$slot->getStartHour()->format('i'));
-                    $end = (clone $date)->setTime((int)$slot->getEndHour()->format('H'), (int)$slot->getEndHour()->format('i'));
-                    $appointment->setStartTime($start);
-                    $appointment->setEndTime($end);
-                    $appointment->setStatus('scheduled');
-                    $appointment->setPrice($therapist->getHourlyRate() ?? 0);
-                    $entityManager->persist($appointment);
-                    $entityManager->flush();
-                    // Powiadomienia e-mail
-                    $emailService->sendAppointmentConfirmation($appointment);
-                    $success = true;
-                }
+            $dateStr = $request->request->get('date');
+            $hourStr = $request->request->get('hour');
+            if (!$dateStr || !$hourStr) {
+                $error = 'Please select date and hour.';
             } else {
-                $error = 'Invalid slot.';
+                $dateObj = \DateTime::createFromFormat('Y-m-d H:i', $dateStr . ' ' . $hourStr);
+                if (!$dateObj) {
+                    $error = 'Invalid date or hour.';
+                } else {
+                    // Sprawdź, czy slot nie jest już zajęty
+                    $existing = $appointmentRepository->findOneBy([
+                        'therapist' => $therapist,
+                        'startTime' => $dateObj
+                    ]);
+                    if ($existing) {
+                        $error = 'This slot is already booked.';
+                    } else {
+                        $appointment = new \App\Entity\Appointment();
+                        $appointment->setTherapist($therapist);
+                        $appointment->setClient($this->getUser());
+                        $appointment->setStartTime($dateObj);
+                        $appointment->setEndTime((clone $dateObj)->modify('+1 hour'));
+                        $appointment->setStatus('scheduled');
+                        $appointment->setPrice($therapist->getHourlyRate() ?? 0);
+                        $entityManager->persist($appointment);
+                        $entityManager->flush();
+                        $emailService->sendAppointmentConfirmation($appointment);
+                        $success = true;
+                    }
+                }
             }
         }
 
@@ -96,5 +92,56 @@ class TherapistController extends AbstractController
             'success' => $success,
             'error' => $error,
         ]);
+    }
+
+    #[Route('/{slug}/available-hours', name: 'app_therapist_available_hours', methods: ['GET'])]
+    public function availableHours(
+        User $therapist,
+        Request $request,
+        AvailabilityRepository $availabilityRepository,
+        AppointmentRepository $appointmentRepository
+    ): Response {
+        $dateStr = $request->query->get('date');
+        if (!$dateStr) {
+            return $this->json(['error' => 'Missing date'], 400);
+        }
+        $date = \DateTime::createFromFormat('Y-m-d', $dateStr);
+        if (!$date) {
+            return $this->json(['error' => 'Invalid date'], 400);
+        }
+        // Pobierz dostępność terapeuty na ten dzień tygodnia
+        $dayOfWeek = $date->format('N'); // 1=pon, 7=nd
+        $availabilities = $availabilityRepository->findBy([
+            'therapist' => $therapist,
+            'dayOfWeek' => $dayOfWeek,
+            'isAvailable' => true,
+        ]);
+        // Wyklucz wyłączone daty
+        $availabilities = array_filter($availabilities, function($a) use ($date) {
+            return !$a->isExcludedDate($date);
+        });
+        if (empty($availabilities)) {
+            return $this->json([]);
+        }
+        // Zbierz zajęte sloty (Appointment)
+        $appointments = $appointmentRepository->findAvailableSlots($therapist, $date);
+        $taken = [];
+        foreach ($appointments as $app) {
+            $taken[] = $app->getStartTime()->format('H:i');
+        }
+        // Generuj sloty co 30 min w ramach dostępności
+        $slots = [];
+        foreach ($availabilities as $a) {
+            $start = (clone $date)->setTime((int)$a->getStartHour()->format('H'), (int)$a->getStartHour()->format('i'));
+            $end = (clone $date)->setTime((int)$a->getEndHour()->format('H'), (int)$a->getEndHour()->format('i'));
+            while ($start < $end) {
+                $slotStr = $start->format('H:i');
+                if (!in_array($slotStr, $taken)) {
+                    $slots[] = $slotStr;
+                }
+                $start->modify('+30 minutes');
+            }
+        }
+        return $this->json($slots);
     }
 }

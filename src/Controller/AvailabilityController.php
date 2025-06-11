@@ -5,7 +5,6 @@
 namespace App\Controller;
 
 use App\Entity\Availability;
-use App\Form\AvailabilityType;
 use App\Repository\AvailabilityRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -34,10 +33,7 @@ class AvailabilityController extends AbstractController
         $availability = new Availability();
         $availability->setTherapist($this->getUser());
 
-        $form = $this->createForm(AvailabilityType::class, $availability);
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
+        if ($request->isMethod('POST')) {
             $entityManager->persist($availability);
             $entityManager->flush();
 
@@ -48,7 +44,6 @@ class AvailabilityController extends AbstractController
 
         return $this->render('availability/new.html.twig', [
             'availability' => $availability,
-            'form' => $form,
         ]);
     }
 
@@ -59,10 +54,7 @@ class AvailabilityController extends AbstractController
             throw $this->createAccessDeniedException('You can only edit your own availability.');
         }
 
-        $form = $this->createForm(AvailabilityType::class, $availability);
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
+        if ($request->isMethod('POST')) {
             $entityManager->flush();
 
             $this->addFlash('success', 'Availability has been updated successfully.');
@@ -72,7 +64,6 @@ class AvailabilityController extends AbstractController
 
         return $this->render('availability/edit.html.twig', [
             'availability' => $availability,
-            'form' => $form,
         ]);
     }
 

@@ -76,11 +76,80 @@
                                 <span>Please log in as a patient to book a session</span>
                             </div>
                         {% else %}
-                            <div class="alert alert-info">Select a date and book an available slot.</div>
+                            <form method="post" id="booking-form">
+                                <div class="form-control mb-4">
+                                    <label class="label">Select a date</label>
+                                    <input type="date" name="date" id="booking-date" class="input input-bordered w-full" min="{{ "now"|date('Y-m-d') }}" required />
+                                </div>
+                                <div class="form-control mb-4">
+                                    <label class="label">Select an hour</label>
+                                    <select name="hour" id="booking-hour" class="select select-bordered w-full" required disabled>
+                                        <option value="">Select hour</option>
+                                    </select>
+                                </div>
+                                <div class="flex justify-end">
+                                    <button type="submit" class="btn btn-primary" id="booking-submit" disabled>Book Appointment</button>
+                                </div>
+                            </form>
+                            <div id="booking-message" class="mt-4"></div>
                         {% endif %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.getElementById('booking-date');
+    const hourSelect = document.getElementById('booking-hour');
+    const submitBtn = document.getElementById('booking-submit');
+    const form = document.getElementById('booking-form');
+    const messageDiv = document.getElementById('booking-message');
+    if (!dateInput) return;
+    $(dateInput).on('change', function() {
+        hourSelect.innerHTML = '<option value="">Loading...</option>';
+        hourSelect.disabled = true;
+        submitBtn.disabled = true;
+        messageDiv.innerHTML = '';
+        if (!dateInput.value) return;
+        $.ajax({
+            url: '{{ path('app_therapist_available_hours', {'slug': therapist.slug}) }}',
+            data: { date: dateInput.value },
+            dataType: 'json',
+            success: function(data) {
+                hourSelect.innerHTML = '';
+                if (data.length === 0) {
+                    hourSelect.innerHTML = '<option value="">No available hours</option>';
+                    hourSelect.disabled = true;
+                } else {
+                    hourSelect.innerHTML = '<option value="">Select hour</option>';
+                    data.forEach(function(hour) {
+                        const opt = document.createElement('option');
+                        opt.value = hour;
+                        opt.textContent = hour;
+                        hourSelect.appendChild(opt);
+                    });
+                    hourSelect.disabled = false;
+                }
+            }
+        });
+    });
+    $(hourSelect).on('change', function() {
+        submitBtn.disabled = !hourSelect.value;
+    });
+    form && form.addEventListener('submit', function(e) {
+        if (!dateInput.value || !hourSelect.value) {
+            e.preventDefault();
+            return;
+        }
+        submitBtn.disabled = true;
+        messageDiv.innerHTML = '';
+    });
+});
+</script>
 {% endblock %} 

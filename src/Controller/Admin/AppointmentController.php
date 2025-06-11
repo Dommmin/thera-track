@@ -23,7 +23,7 @@ class AppointmentController extends AbstractController
         private GoogleCalendarService $googleCalendarService
     ) {}
 
-    #[Route('/', name: 'panel_appointment_index', methods: ['GET'])]
+    #[Route('', name: 'panel_appointment_index', methods: ['GET'])]
     #[IsGranted('ROLE_USER')]
     public function index(AppointmentRepository $appointmentRepository, EntityManagerInterface $entityManager): Response
     {

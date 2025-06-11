@@ -4,7 +4,6 @@ namespace App\Controller\Admin;
 
 use App\Entity\Availability;
 use App\Entity\User;
-use App\Form\AvailabilityForm;
 use App\Form\ProfileForm;
 use App\Repository\AvailabilityRepository;
 use App\Service\GoogleCalendarService;
@@ -30,27 +29,52 @@ class TherapistController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
 
-        $availability = new Availability();
-        $availability->setTherapist($user);
-        
-        $form = $this->createForm(AvailabilityForm::class, $availability);
-        $form->handleRequest($request);
+        $errors = [];
+        if ($request->isMethod('POST')) {
+            $dayOfWeek = $request->request->get('dayOfWeek');
+            $startHour = $request->request->get('startHour');
+            $endHour = $request->request->get('endHour');
+            $excludedDate = $request->request->get('excludedDate');
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($availability);
-            $entityManager->flush();
+            // Walidacja
+            if (!in_array($dayOfWeek, ['1','2','3','4','5'])) {
+                $errors[] = 'Invalid day of week.';
+            }
+            if (!$startHour || !$endHour) {
+                $errors[] = 'Start and end time are required.';
+            }
+            if ($startHour && $endHour && $startHour >= $endHour) {
+                $errors[] = 'End time must be after start time.';
+            }
 
-            $this->googleCalendarService->addAvailability($availability);
-
-            $this->addFlash('success', 'Availability added successfully!');
-            return $this->redirectToRoute('app_therapist_availability');
+            if (empty($errors)) {
+                $availability = new Availability();
+                $availability->setTherapist($user);
+                $availability->setDayOfWeek($dayOfWeek);
+                $availability->setStartHour(\DateTime::createFromFormat('H:i', $startHour));
+                $availability->setEndHour(\DateTime::createFromFormat('H:i', $endHour));
+                $availability->setIsAvailable(true);
+                if ($excludedDate) {
+                    $availability->setExcludedDate(\DateTime::createFromFormat('Y-m-d', $excludedDate));
+                }
+                $entityManager->persist($availability);
+                $entityManager->flush();
+                $this->addFlash('success', 'Availability added successfully!');
+                return $this->redirectToRoute('app_therapist_availability');
+            } else {
+                foreach ($errors as $err) {
+                    $this->addFlash('danger', $err);
+                }
+            }
         }
 
         $excludedDates = $availabilityRepository->findExcludedDates($user);
+        // Możesz też pobrać wszystkie dostępności terapeuty:
+        $availabilities = $availabilityRepository->findBy(['therapist' => $user], ['dayOfWeek' => 'ASC', 'startHour' => 'ASC']);
 
-        return $this->render('therapist/availability.html.twig', [
-            'form' => $form->createView(),
+        return $this->render('panel/availability.html.twig', [
             'excluded_dates' => $excludedDates,
+            'availabilities' => $availabilities,
         ]);
     }
 

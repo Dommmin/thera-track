@@ -70,9 +70,13 @@ class AvailabilityRepository extends ServiceEntityRepository
         for ($day = 1; $day <= 5; $day++) {
             $availability = new Availability();
             $availability->setTherapist($therapist);
-            $availability->setDayOfWeek($day);
-            $availability->setStartHour(9); // 9 AM
-            $availability->setEndHour(17); // 5 PM
+            $availability->setDayOfWeek((string)$day);
+            $start = new \DateTime();
+            $start->setTime(9, 0, 0);
+            $end = new \DateTime();
+            $end->setTime(17, 0, 0);
+            $availability->setStartHour($start);
+            $availability->setEndHour($end);
             $availability->setIsAvailable(true);
 
             $em->persist($availability);
