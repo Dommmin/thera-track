@@ -209,8 +209,8 @@ fi
 echo "▶️ Cleaning old releases (keeping 5 latest)..."
 cd "$RELEASES_DIR"
 if ls -dt */ >/dev/null 2>&1; then
-    # Keep 5 latest releases
-    ls -dt */ | tail -n +6 | while read -r dir; do
+    # Keep 3 latest releases
+    ls -dt */ | tail -n +4 | while read -r dir; do
         if [ -d "$dir" ]; then
             echo "Removing old release: $dir"
             rm -rf "$dir"

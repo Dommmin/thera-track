@@ -53,7 +53,6 @@ class AppFixtures extends Fixture
             $therapist->setSpecialization($specialization);
             $therapist->setIsVerified(true);
             $therapist->setBio($faker->realText);
-            $therapist->setAvatar('https://avatar.iran.liara.run/public/job/doctor/' . $gender);
 
             $therapist->setPassword(
                 $this->passwordHasher->hashPassword($therapist, 'password')
