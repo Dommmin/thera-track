@@ -30,34 +30,12 @@
                             </div>
                         {% endif %}
 
-                        <div class="divider"></div>
+                        {{ therapist.hourlyRate }} zł
 
-                        <h2 class="text-2xl font-bold mb-4">Availability</h2>
-                        <form method="get" class="mb-4 flex flex-wrap gap-2 items-center">
-                            <label for="date" class="font-semibold">Choose a date:</label>
-                            <input type="date" id="date" name="date" value="{{ date|date('Y-m-d') }}" class="input input-bordered" min="{{ "now"|date('Y-m-d') }}" onchange="this.form.submit()">
-                        </form>
-                        {% if available_slots is empty %}
-                            <div class="alert alert-warning">No available slots for this day.</div>
-                        {% else %}
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {% for slot in available_slots %}
-                                    <div class="card bg-base-200">
-                                        <div class="card-body flex flex-col gap-2">
-                                            <div class="font-semibold">{{ slot.startHour|date('H:i') }} - {{ slot.endHour|date('H:i') }}</div>
-                                            {% if is_granted('ROLE_PATIENT') %}
-                                                <form method="post" class="mt-2">
-                                                    <input type="hidden" name="slot_id" value="{{ slot.id }}">
-                                                    <button type="submit" class="btn btn-primary btn-sm w-full">Book this slot</button>
-                                                </form>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
+{#                        <div class="divider"></div>#}
+
                         {% if success %}
-                            <div class="alert alert-success mt-4">Appointment booked successfully! You will receive a confirmation email.</div>
+                            <div class="alert alert-success mt-4">Appointment booked successfully!</div>
                         {% endif %}
                         {% if error %}
                             <div class="alert alert-error mt-4">{{ error }}</div>

@@ -5,21 +5,23 @@ namespace App\Entity;
 use App\Repository\AppointmentRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use App\Entity\AppointmentStatus;
+use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: AppointmentRepository::class)]
 class Appointment
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
-    private ?int $id = null;
+    #[ORM\GeneratedValue(strategy: 'NONE')]
+    #[ORM\Column(type: 'uuid', unique: true)]
+    private ?Uuid $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'therapistAppointments')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?User $therapist = null;
 
     #[ORM\ManyToOne(inversedBy: 'clientAppointments')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?User $client = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
@@ -31,13 +33,18 @@ class Appointment
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $notes = null;
 
-    #[ORM\Column(length: 20)]
-    private ?string $status = 'scheduled';
+    #[ORM\Column(type: 'string', enumType: AppointmentStatus::class, length: 20)]
+    private AppointmentStatus $status = AppointmentStatus::SCHEDULED;
 
     #[ORM\Column]
     private ?float $price = null;
 
-    public function getId(): ?int
+    public function __construct()
+    {
+        $this->id = Uuid::v4();
+    }
+
+    public function getId(): ?Uuid
     {
         return $this->id;
     }
@@ -97,12 +104,12 @@ class Appointment
         return $this;
     }
 
-    public function getStatus(): ?string
+    public function getStatus(): AppointmentStatus
     {
         return $this->status;
     }
 
-    public function setStatus(string $status): static
+    public function setStatus(AppointmentStatus $status): static
     {
         $this->status = $status;
         return $this;

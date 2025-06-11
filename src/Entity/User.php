@@ -71,13 +71,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $avatar = null;
 
-    #[ORM\OneToMany(mappedBy: 'therapist', targetEntity: Appointment::class)]
+    #[ORM\OneToMany(mappedBy: 'therapist', targetEntity: Appointment::class, cascade: ['remove'], orphanRemoval: true)]
     private Collection $therapistAppointments;
 
-    #[ORM\OneToMany(mappedBy: 'client', targetEntity: Appointment::class)]
+    #[ORM\OneToMany(mappedBy: 'client', targetEntity: Appointment::class, cascade: ['remove'], orphanRemoval: true)]
     private Collection $clientAppointments;
 
-    #[ORM\OneToMany(mappedBy: 'therapist', targetEntity: Availability::class, orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'therapist', targetEntity: Availability::class, orphanRemoval: true, cascade: ['remove'])]
     private Collection $availabilities;
 
     #[ORM\ManyToOne(inversedBy: 'users')]

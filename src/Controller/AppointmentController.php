@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Appointment;
 use App\Entity\User;
+use App\Entity\AppointmentStatus;
 use App\Repository\AppointmentRepository;
 use App\Repository\AvailabilityRepository;
 use App\Service\EmailService;
@@ -83,7 +84,7 @@ class AppointmentController extends AbstractController
             $appointment->setStartTime($startTime);
             $appointment->setEndTime($endTime);
             $appointment->setPrice($therapist->getHourlyRate());
-            $appointment->setStatus('scheduled');
+            $appointment->setStatus(AppointmentStatus::SCHEDULED);
 
             $entityManager->persist($appointment);
             $entityManager->flush();
@@ -125,15 +126,10 @@ class AppointmentController extends AbstractController
         Appointment $appointment,
         EntityManagerInterface $entityManager
     ): Response {
-        /** @var User $user */
-        $user = $this->getUser();
-        
-        if ($user !== $appointment->getTherapist() && $user !== $appointment->getClient()) {
-            throw $this->createAccessDeniedException('You cannot cancel this appointment.');
-        }
+        $this->denyAccessUnlessGranted('cancel', $appointment);
 
         if ($this->isCsrfTokenValid('cancel'.$appointment->getId(), $request->request->get('_token'))) {
-            $appointment->setStatus('cancelled');
+            $appointment->setStatus(AppointmentStatus::CANCELLED);
             $entityManager->flush();
 
             $this->emailService->sendAppointmentCancellation($appointment);

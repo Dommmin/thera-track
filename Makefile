@@ -1,4 +1,4 @@
-.PHONY: up down migrate test setup-test-db drop create recreate fixtures
+.PHONY: up down migrate test setup-test-db drop create recreate migration fixtures
 
 # Start the application
 up:
@@ -8,9 +8,23 @@ up:
 down:
 	docker compose down
 
+drop:
+	docker compose exec app php bin/console doctrine:database:drop --force
+
+create:
+	docker compose exec app php bin/console doctrine:database:create
+
+recreate: drop create
+
+migration:
+	docker compose exec app php bin/console make:migration
+
 # Run migrations
 migrate:
 	docker compose exec app php bin/console doctrine:migrations:migrate
+
+fixtures:
+	docker compose exec app php bin/console doctrine:fixtures:load
 
 # Setup test database
 #TODO: implement
@@ -33,14 +47,3 @@ logs:
 # Enter app container
 shell:
 	docker compose exec app bash
-
-drop:
-	docker compose exec app php bin/console doctrine:database:drop --force
-
-create:
-	docker compose exec app php bin/console doctrine:database:create
-
-recreate: drop create
-
-fixtures:
-	docker compose exec app php bin/console doctrine:fixtures:load

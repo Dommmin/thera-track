@@ -40,11 +40,15 @@ class AppointmentRepository extends ServiceEntityRepository
 
     public function findAvailableSlots(User $therapist, \DateTime $date): array
     {
+        $startOfDay = (clone $date)->setTime(0, 0, 0);
+        $endOfDay = (clone $date)->setTime(23, 59, 59);
         return $this->createQueryBuilder('a')
             ->andWhere('a.therapist = :therapist')
-            ->andWhere('DATE(a.startTime) = :date')
+            ->andWhere('a.startTime >= :startOfDay')
+            ->andWhere('a.startTime <= :endOfDay')
             ->setParameter('therapist', $therapist)
-            ->setParameter('date', $date->format('Y-m-d'))
+            ->setParameter('startOfDay', $startOfDay)
+            ->setParameter('endOfDay', $endOfDay)
             ->getQuery()
             ->getResult();
     }

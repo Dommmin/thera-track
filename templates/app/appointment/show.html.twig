@@ -1,4 +1,4 @@
-{% extends 'panel/layout.html.twig' %}
+{% extends 'app/layout.html.twig' %}
 
 {% block title %}Appointment Details{% endblock %}
 
@@ -35,8 +35,14 @@
                     <div class="prose">{{ appointment.notes }}</div>
                 </div>
             {% endif %}
-            <div class="flex justify-end">
-                <a href="{{ path('panel_appointment_index') }}" class="btn btn-ghost">Back to Appointments</a>
+            <div class="flex justify-between items-center mt-6">
+                <a href="{{ path('app_appointment_index') }}" class="btn btn-ghost">Back to Appointments</a>
+                {% if appointment.status.value != 'cancelled' and appointment.status.value != 'in_progress' %}
+                    <form method="post" action="{{ path('app_appointment_cancel', {id: appointment.id}) }}" onsubmit="return confirm('Are you sure you want to cancel this appointment?');">
+                        <input type="hidden" name="_token" value="{{ csrf_token('cancel' ~ appointment.id) }}">
+                        <button type="submit" class="btn btn-error">Cancel Appointment</button>
+                    </form>
+                {% endif %}
             </div>
         </div>
     </div>

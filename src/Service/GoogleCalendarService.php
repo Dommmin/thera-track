@@ -33,7 +33,7 @@ class GoogleCalendarService
 
     public function addAppointment(Appointment $appointment): void
     {
-        if (!$this->service) {
+        if (!$this->service || empty($_ENV['GOOGLE_CLIENT_ID']) || empty($_ENV['GOOGLE_CLIENT_SECRET']) || empty($_ENV['GOOGLE_REDIRECT_URI'])) {
             return;
         }
 
@@ -59,7 +59,7 @@ class GoogleCalendarService
 
     public function addAvailability(Availability $availability): void
     {
-        if (!$this->service) {
+        if (!$this->service || empty($_ENV['GOOGLE_CLIENT_ID']) || empty($_ENV['GOOGLE_CLIENT_SECRET']) || empty($_ENV['GOOGLE_REDIRECT_URI'])) {
             return;
         }
 
@@ -94,7 +94,7 @@ class GoogleCalendarService
 
     public function updateAppointment(Appointment $appointment): void
     {
-        if (!$this->service) {
+        if (!$this->service || empty($_ENV['GOOGLE_CLIENT_ID']) || empty($_ENV['GOOGLE_CLIENT_SECRET']) || empty($_ENV['GOOGLE_REDIRECT_URI'])) {
             return;
         }
 
@@ -115,7 +115,7 @@ class GoogleCalendarService
 
     public function deleteAvailability(Availability $availability): void
     {
-        if (!$this->service) {
+        if (!$this->service || empty($_ENV['GOOGLE_CLIENT_ID']) || empty($_ENV['GOOGLE_CLIENT_SECRET']) || empty($_ENV['GOOGLE_REDIRECT_URI'])) {
             return;
         }
 

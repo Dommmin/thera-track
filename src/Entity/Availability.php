@@ -32,7 +32,7 @@ class Availability
     private ?\DateTimeInterface $endHour = null;
 
     #[ORM\ManyToOne(inversedBy: 'availabilities')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?User $therapist = null;
 
     #[ORM\Column]

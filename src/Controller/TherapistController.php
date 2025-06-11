@@ -14,6 +14,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
+use App\Entity\AppointmentStatus;
 
 #[Route('/therapists', name: 'app_therapist_')]
 class TherapistController extends AbstractController
@@ -51,6 +52,7 @@ class TherapistController extends AbstractController
 
         $success = false;
         $error = null;
+
         if ($request->isMethod('POST') && $this->isGranted('ROLE_PATIENT')) {
             $dateStr = $request->request->get('date');
             $hourStr = $request->request->get('hour');
@@ -74,8 +76,8 @@ class TherapistController extends AbstractController
                         $appointment->setClient($this->getUser());
                         $appointment->setStartTime($dateObj);
                         $appointment->setEndTime((clone $dateObj)->modify('+1 hour'));
-                        $appointment->setStatus('scheduled');
-                        $appointment->setPrice($therapist->getHourlyRate() ?? 0);
+                        $appointment->setStatus(AppointmentStatus::SCHEDULED);
+                        $appointment->setPrice($therapist->getHourlyRate());
                         $entityManager->persist($appointment);
                         $entityManager->flush();
                         $emailService->sendAppointmentConfirmation($appointment);
@@ -128,14 +130,14 @@ class TherapistController extends AbstractController
         // Generuj sloty co 30 min w ramach dostępności
         $slots = [];
         foreach ($availabilities as $a) {
-            $start = (clone $date)->setTime((int)$a->getStartHour()->format('H'), (int)$a->getStartHour()->format('i'));
+            $start = (clone $date)->setTime((int)$a->getStartHour()->format('H'), 0);
             $end = (clone $date)->setTime((int)$a->getEndHour()->format('H'), (int)$a->getEndHour()->format('i'));
             while ($start < $end) {
                 $slotStr = $start->format('H:i');
                 if (!in_array($slotStr, $taken)) {
                     $slots[] = $slotStr;
                 }
-                $start->modify('+30 minutes');
+                $start->modify('+1 hour');
             }
         }
         return $this->json($slots);

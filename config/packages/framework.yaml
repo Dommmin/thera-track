@@ -7,6 +7,8 @@ framework:
         handler_id: '%env(REDIS_URL)%'
         cookie_secure: auto
         cookie_samesite: lax
+        cookie_lifetime: 604800 # 7 days
+        gc_maxlifetime: 604800 # 7 days
 
     #esi: true
     #fragments: true

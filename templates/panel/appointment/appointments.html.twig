@@ -50,8 +50,8 @@
                                 {{ appointment.startTime|date('F j, Y') }}
                             </p>
                         </div>
-                        <div class="badge badge-{{ appointment.status == 'confirmed' ? 'success' : (appointment.status == 'pending' ? 'warning' : 'error') }}">
-                            {{ appointment.status|title }}
+                        <div class="badge badge-{{ appointment.status.value == 'confirmed' ? 'success' : (appointment.status.value == 'pending' ? 'warning' : (appointment.status.value == 'cancelled' ? 'error' : (appointment.status.value == 'in_progress' ? 'info' : 'secondary'))) }}">
+                            {{ appointment.status.value|title }}
                         </div>
                     </div>
                     <div class="space-y-2 mb-4">
@@ -71,7 +71,7 @@
                         {% endif %}
                     </div>
                     <div class="card-actions justify-end">
-                        {% if appointment.status == 'pending' %}
+                        {% if appointment.status.value == 'pending' %}
                             <form method="post" action="{{ path('panel_appointment_cancel', {'id': appointment.id}) }}" class="inline" onsubmit="return confirm('Are you sure you want to cancel this appointment?');">
                                 <input type="hidden" name="_token" value="{{ csrf_token('cancel' ~ appointment.id) }}">
                                 <button type="submit" class="btn btn-error btn-sm">Cancel</button>
@@ -101,8 +101,8 @@
                                 {{ appointment.startTime|date('F j, Y') }}
                             </p>
                         </div>
-                        <div class="badge badge-{{ appointment.status == 'confirmed' ? 'success' : (appointment.status == 'pending' ? 'warning' : 'error') }}">
-                            {{ appointment.status|title }}
+                        <div class="badge badge-{{ appointment.status.value == 'confirmed' ? 'success' : (appointment.status.value == 'pending' ? 'warning' : (appointment.status.value == 'cancelled' ? 'error' : (appointment.status.value == 'in_progress' ? 'info' : 'secondary'))) }}">
+                            {{ appointment.status.value|title }}
                         </div>
                     </div>
                     <div class="space-y-2 mb-4">
