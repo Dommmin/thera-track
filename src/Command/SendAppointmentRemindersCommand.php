@@ -29,17 +29,7 @@ class SendAppointmentRemindersCommand extends Command
     {
         $tomorrow = (new \DateTime('tomorrow'))->setTime(0, 0, 0);
         $dayAfter = (clone $tomorrow)->modify('+1 day');
-
-        $qb = $this->entityManager->createQueryBuilder();
-        $qb->select('a')
-            ->from(Appointment::class, 'a')
-            ->where('a.startTime >= :tomorrow')
-            ->andWhere('a.startTime < :dayAfter')
-            ->andWhere('a.status = :status')
-            ->setParameter('tomorrow', $tomorrow)
-            ->setParameter('dayAfter', $dayAfter)
-            ->setParameter('status', 'scheduled');
-        $appointments = $qb->getQuery()->getResult();
+        $appointments = $this->appointmentRepository->findAppointmentsForReminder($tomorrow, $dayAfter);
 
         $count = 0;
         foreach ($appointments as $appointment) {

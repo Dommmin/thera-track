@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Appointment;
 use App\Entity\User;
+use App\Entity\AppointmentStatus;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -49,6 +50,19 @@ class AppointmentRepository extends ServiceEntityRepository
             ->setParameter('therapist', $therapist)
             ->setParameter('startOfDay', $startOfDay)
             ->setParameter('endOfDay', $endOfDay)
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findAppointmentsForReminder(\DateTimeInterface $from, \DateTimeInterface $to): array
+    {
+        return $this->createQueryBuilder('a')
+            ->where('a.startTime >= :from')
+            ->andWhere('a.startTime < :to')
+            ->andWhere('a.status = :status')
+            ->setParameter('from', $from)
+            ->setParameter('to', $to)
+            ->setParameter('status', AppointmentStatus::SCHEDULED)
             ->getQuery()
             ->getResult();
     }
