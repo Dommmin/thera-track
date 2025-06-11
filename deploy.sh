@@ -118,13 +118,37 @@ fi
 # Backup current symlink BEFORE changing it
 echo "▶️ Backing up current symlink..."
 if [ -L "$CURRENT_LINK" ]; then
+    CURRENT_TARGET=$(readlink "$CURRENT_LINK" 2>/dev/null || echo "unknown")
+    echo "Current deployment: $CURRENT_TARGET"
     cp -P "$CURRENT_LINK" "$CURRENT_LINK.backup" 2>/dev/null || true
-    echo "Current deployment backed up: $(readlink $CURRENT_LINK 2>/dev/null || echo 'none')"
+    echo "✅ Current deployment backed up"
+elif [ -e "$CURRENT_LINK" ]; then
+    echo "⚠️ $CURRENT_LINK exists but is not a symlink!"
+    ls -la "$CURRENT_LINK"
+    echo "❌ Current link is not a symlink - this needs manual intervention"
+    exit 1
+else
+    echo "ℹ️ No current symlink found (first deployment?)"
 fi
+
+# Debug filesystem and permissions
+echo "▶️ Checking filesystem and permissions..."
+echo "App base directory permissions:"
+ls -la "$APP_BASE/"
+echo "Current user: $(whoami)"
+echo "Current groups: $(groups)"
+echo "Available disk space:"
+df -h "$APP_BASE"
 
 # Atomic symlink update with verification
 echo "▶️ Updating current symlink..."
-TEMP_LINK="$CURRENT_LINK.tmp.$$"
+echo "Current symlink points to: $(readlink $CURRENT_LINK 2>/dev/null || echo 'none')"
+echo "Will update to: $RELEASE_DIR"
+
+TEMP_LINK="$CURRENT_LINK.tmp.$"
+
+# Remove temporary link if it exists
+rm -f "$TEMP_LINK"
 
 # Create temporary symlink
 if ! ln -sf "$RELEASE_DIR" "$TEMP_LINK"; then
@@ -133,15 +157,30 @@ if ! ln -sf "$RELEASE_DIR" "$TEMP_LINK"; then
 fi
 
 # Verify temporary symlink points to correct location
-if [ "$(readlink $TEMP_LINK)" != "$RELEASE_DIR" ]; then
+TEMP_TARGET=$(readlink "$TEMP_LINK" 2>/dev/null || echo "FAILED")
+if [ "$TEMP_TARGET" != "$RELEASE_DIR" ]; then
     echo "❌ Temporary symlink verification failed"
+    echo "Expected: $RELEASE_DIR"
+    echo "Actual: $TEMP_TARGET"
     rm -f "$TEMP_LINK"
     exit 1
 fi
 
-# Atomic move - this should be atomic on most filesystems
+echo "✅ Temporary symlink created successfully"
+
+# Remove current symlink first (this ensures mv will work)
+if [ -L "$CURRENT_LINK" ] || [ -e "$CURRENT_LINK" ]; then
+    echo "▶️ Removing current symlink..."
+    rm -f "$CURRENT_LINK"
+fi
+
+# Move temporary symlink to final location
 if ! mv "$TEMP_LINK" "$CURRENT_LINK"; then
-    echo "❌ Failed to update current symlink"
+    echo "❌ Failed to move temporary symlink to final location"
+    # Try to restore if we have a backup
+    if [ -L "$CURRENT_LINK.backup" ]; then
+        cp -P "$CURRENT_LINK.backup" "$CURRENT_LINK" 2>/dev/null || true
+    fi
     rm -f "$TEMP_LINK"
     exit 1
 fi
@@ -152,6 +191,9 @@ if [ "$ACTUAL_TARGET" != "$RELEASE_DIR" ]; then
     echo "❌ Symlink verification failed!"
     echo "Expected: $RELEASE_DIR"
     echo "Actual: $ACTUAL_TARGET"
+    echo "Filesystem info:"
+    ls -la "$CURRENT_LINK" || true
+    ls -la "$APP_BASE/" | grep current || true
     rollback
 fi
 
