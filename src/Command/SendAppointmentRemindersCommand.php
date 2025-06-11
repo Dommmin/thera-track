@@ -2,10 +2,8 @@
 
 namespace App\Command;
 
-use App\Entity\Appointment;
 use App\Repository\AppointmentRepository;
 use App\Service\EmailService;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -20,7 +18,6 @@ class SendAppointmentRemindersCommand extends Command
     public function __construct(
         private AppointmentRepository $appointmentRepository,
         private EmailService $emailService,
-        private EntityManagerInterface $entityManager
     ) {
         parent::__construct();
     }

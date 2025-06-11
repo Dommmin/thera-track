@@ -98,7 +98,7 @@ class TherapistController extends AbstractController
             $this->addFlash('success', 'Availability deleted successfully.');
         }
 
-        return $this->redirectToRoute('app_therapist_calendar');
+        return $this->redirectToRoute('app_therapist_availability');
     }
 
     #[Route('/availability/exclude/{date}', name: 'app_therapist_remove_excluded_date', methods: ['POST'])]

@@ -20,7 +20,9 @@
                     <a href="{{ path('app_home') }}" class="btn btn-ghost text-xl">
                         <span class="text-primary font-bold">Thera</span><span class="text-secondary">Track</span>
                     </a>
-                    <a href="{{ path('app_therapist_list') }}" class="max-lg:hidden btn btn-ghost">Find therapist</a>
+                    {% if is_granted('ROLE_PATIENT') %}
+                        <a href="{{ path('app_therapist_list') }}" class="max-lg:hidden btn btn-ghost">Find therapist</a>
+                    {% endif %}
                 </div>
 
                 <div class="flex-none">
@@ -38,6 +40,9 @@
                                 {% endif %}
                             </div>
                             <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+                                {% if is_granted('ROLE_THERAPIST') %}
+                                    <li><a href="{{ path('app_panel') }}">Panel</a></li>
+                                {% endif %}
                                 <li><a href="{{ path('app_settings') }}">Settings</a></li>
                                 <li><a href="{{ path('app_logout') }}">Logout</a></li>
                             </ul>
@@ -89,14 +94,16 @@
                     </a>
                 </div>
                 <ul class="menu p-4 text-base-content">
-                    <li>
-                        <a href="{{ path('app_therapist_list') }}" class="flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16h6m2 0a2 2 0 002-2V8a2 2 0 00-2-2H7a2 2 0 00-2 2v6a2 2 0 002 2h2z" />
-                            </svg>
-                            Find therapist
-                        </a>
-                    </li>
+                    {% if is_granted('ROLE_PATIENT') %}
+                        <li>
+                            <a href="{{ path('app_therapist_list') }}" class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16h6m2 0a2 2 0 002-2V8a2 2 0 00-2-2H7a2 2 0 00-2 2v6a2 2 0 002 2h2z" />
+                                </svg>
+                                Find therapist
+                            </a>
+                        </li>
+                    {% endif %}
                 </ul>
             </aside>
         </div>
