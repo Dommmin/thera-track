@@ -19,6 +19,7 @@ use App\Dto\Therapist\BookAppointmentDto;
 use App\Manager\AppointmentManager;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use App\Service\AvailabilityService;
+use App\Service\TherapistCacheService;
 
 #[Route('/therapists', name: 'app_therapist_')]
 class TherapistController extends AbstractController
@@ -26,7 +27,7 @@ class TherapistController extends AbstractController
     public function __construct(private AppointmentManager $appointmentManager) {}
 
     #[Route('', name: 'list', methods: ['GET'])]
-    public function list(Request $request, UserRepository $userRepository): Response
+    public function list(Request $request, UserRepository $userRepository, TherapistCacheService $therapistCacheService): Response
     {
         $location = $request->query->get('location');
         $search = $request->query->get('search');
@@ -34,7 +35,17 @@ class TherapistController extends AbstractController
         $page = max(1, (int)$request->query->get('page', 1));
         $perPage = 6;
 
-        $result = $userRepository->findTherapists($location, $search, $sort, $page, $perPage);
+        $filters = [
+            'location' => $location,
+            'search' => $search,
+            'sort' => $sort,
+            'page' => $page,
+            'perPage' => $perPage,
+        ];
+
+        $result = $therapistCacheService->getTherapistList($filters, function () use ($userRepository, $location, $search, $sort, $page, $perPage) {
+            return $userRepository->findTherapists($location, $search, $sort, $page, $perPage);
+        });
         $therapists = $result['results'];
         $total = $result['total'];
         $totalPages = (int) ceil($total / $perPage);
@@ -62,7 +73,8 @@ class TherapistController extends AbstractController
         AppointmentRepository $appointmentRepository,
         EntityManagerInterface $entityManager,
         EmailService $emailService,
-        ValidatorInterface $validator
+        ValidatorInterface $validator,
+        TherapistCacheService $therapistCacheService
     ): Response {
         if (!in_array('ROLE_THERAPIST', $therapist->getRoles())) {
             throw $this->createNotFoundException('Therapist not found');
@@ -91,8 +103,12 @@ class TherapistController extends AbstractController
             }
         }
 
+        $therapistData = $therapistCacheService->getTherapistProfile($therapist->getSlug(), function () use ($therapist) {
+            return $therapist;
+        });
+
         return $this->render('app/therapist/show.html.twig', [
-            'therapist' => $therapist,
+            'therapist' => $therapistData,
             'date' => $date,
             'available_slots' => $availableSlots,
             'success' => $success,
