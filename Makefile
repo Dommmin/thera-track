@@ -1,4 +1,4 @@
-.PHONY: up down migrate test setup-test-db drop create recreate migration fixtures
+.PHONY: up down build migrate test setup-test-db drop create recreate migration fixtures
 
 # Start the application
 up:
@@ -7,6 +7,9 @@ up:
 # Stop the application
 down:
 	docker compose down
+
+build:
+	docker compose build
 
 drop:
 	docker compose exec app php bin/console doctrine:database:drop --force
@@ -27,8 +30,9 @@ fixtures:
 	docker compose exec app php bin/console doctrine:fixtures:load
 
 # Setup test database
-#TODO: implement
 setup-test-db:
+	docker compose exec mysql mysql -uroot -psecret -e "CREATE DATABASE IF NOT EXISTS symfony_test;"
+	#docker compose exec app php bin/console doctrine:migrations:migrate --env=test
 
 # Run tests
 test: setup-test-db
